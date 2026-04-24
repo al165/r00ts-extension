@@ -1,0 +1,31 @@
+{
+    "name": "r00ts-webpack",
+    "version": "1.0.0",
+    "description": "",
+    "private": true,
+    "scripts": {
+        "build:dev:firefox": "webpack --config webpack.dev.js --env browser=firefox",
+        "build:dev:chrome": "webpack --config webpack.dev.js --env browser=chrome",
+        "build:dev:all": "npm run build:dev:firefox && npm run build:dev:chrome",
+        "build:production:firefox": "webpack --config webpack.production.js --env browser=firefox",
+        "build:production:chrome": "webpack --config webpack.production.js --env browser=chrome",
+        "build:production:all": "npm run build:production:firefox && npm run build:production:chrome",
+        "watch:firefox": "webpack --watch --config webpack.dev.js --env browser=firefox",
+        "watch:chrome": "webpack --watch --config webpack.dev.js --env browser=chrome",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "type": "commonjs",
+    "dependencies": {
+        "webpack": "^5.106.2",
+        "webpack-cli": "^7.0.2"
+    },
+    "devDependencies": {
+        "copy-webpack-plugin": "^14.0.0",
+        "web-ext-plugin": "^2.13.0",
+        "webextension-polyfill": "^0.12.0",
+        "webpack-merge": "^6.0.1"
+    }
+}
