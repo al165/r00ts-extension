@@ -3,8 +3,11 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 
 module.exports = {
     entry: {
-        background: "./src/background.js",
-        "popup/script": "./src/popup/script.js"
+        background: "./src/background.ts",
+        "popup/script": "./src/popup/script.ts"
+    },
+    resolve: {
+        extensions: ['ts', 'js']
     },
     output: {
         path: path.resolve(__dirname, "dist"),
@@ -12,14 +15,19 @@ module.exports = {
         clean: true
     },
     module: {
-        rules: [
-            { test: /\.css?$/, use: ["style-loader", "css-loader"] },
+        rules: [{
+            test: /\.(ts|tsx)$/,
+            use: { loader: 'ts-loader', options: { transpileOnly: true } },
+
+            exclude: /node_modules/,
+        },
+        { test: /\.css?$/, use: ["style-loader", "css-loader"] },
         ]
     },
     plugins: [
         new CopyWebpackPlugin({
             patterns: [
-                { from: "src", to: ".", globOptions: { ignore: ["**/*.js"] } }
+                { from: "src", to: ".", globOptions: { ignore: ["**/*.js", "**/*.ts"] } }
             ]
         })
     ]

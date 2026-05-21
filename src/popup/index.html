@@ -2,12 +2,42 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link href="style.css" rel="stylesheet" />
+    <title>r00ts</title>
   </head>
   <body>
-    <h1 id="myHeading">My content</h1>
-    <button id="btn">Click me!</button>
     <div id="output"></div>
     <script src="script.js"></script>
+    <div class="header">
+      <div class="logo">
+        <span class="logo-title">🫚 r00ts</span>
+      </div>
+      <div class="header-actions">
+        <button class="btn" id="btn-clear">Clear</button>
+      </div>
+    </div>
+    <div class="page-url-bar">
+      <span class="page-url-label">PAGE</span>
+      <span class="page-url-value" id="page-url">—</span>
+    </div>
+    <div class="col-headers">
+      <span class="col-header">IP Address</span>
+      <span class="col-header">Host</span>
+      <span class="col-header">Network</span>
+      <span class="col-header" style="text-align:right">Requests</span>
+      <span class="col-header" style="text-align:right">Time</span>
+    </div>
+    <div class="entries" id="entries-list">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">⬡</div>
+        <div class="empty-title">No requests captured yet</div>
+        <div class="empty-sub">Navigate to a page to see IP addresses</div>
+      </div>
+    </div>
+    <div class="footer">
+      <span class="footer-stat">Unique IPs: <span id="ip-count">0</span></span>
+      <span class="footer-stat">Requests: <span id="req-count">0</span> (Cached: <span id="cached-count">0</span>)</span>
+    </div>
   </body>
 </html>
