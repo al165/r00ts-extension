@@ -1,14 +1,16 @@
 import * as browser from "webextension-polyfill";
-import type { Entry, PageData } from "./types";
+import { MessageTypes, type Entry, type PageData } from "./types";
 
 // Time for each request
 const requestTimings: { [key: string]: number } = {};
 
 const tabData: { [key: number]: PageData } = {};
 
+const userData: { country_code?: string } = {};
+
 function handleMessage(msg: any, _sender: browser.Runtime.MessageSender, sendResponse: (res: any) => void): true {
     console.log("handleMessage", msg.type);
-    if (msg.type === "get_tab_data") {
+    if (msg.type == MessageTypes.GET_TAB_DATA) {
         const { tabId } = msg;
         if (tabId)
             sendResponse(tabData[tabId]);
@@ -16,6 +18,10 @@ function handleMessage(msg: any, _sender: browser.Runtime.MessageSender, sendRes
     }
 
     return true;
+}
+
+function handleStartup() {
+    console.log('onStartup');
 }
 
 browser.runtime.onMessage.addListener(handleMessage);
@@ -40,7 +46,7 @@ browser.webRequest.onResponseStarted.addListener(
         }
 
         if (!tabData[tabId])
-            tabData[tabId] = { pageUrl: "", cachedCount: 0, requestsCount: 0, entries: {} };
+            tabData[tabId] = { pageUrl: "", cachedCount: 0, requestsCount: 0, entries: {}, facilities: {} };
 
         let durationMs = null;
         if (!fromCache) {
@@ -73,12 +79,43 @@ browser.webRequest.onResponseStarted.addListener(
                 statusCode,
                 timestamp: new Date(timeStamp).toISOString(),
                 durationMs,
-                network: null
+                network: null,
             };
+
             tabData[tabId].entries[ip] = entry;
             tabData[tabId].requestsCount += 1;
 
-            browser.runtime.sendMessage({ type: 'new_entry', tabId, data: entry }).catch(() => { });
+            browser.runtime.sendMessage({ type: MessageTypes.NEW_ENTRY, tabId, data: entry }).catch(() => { });
+
+            if (process.env.API_ENDPOINT) {
+                let ip_url = process.env.API_ENDPOINT + ip;
+                if (userData.country_code)
+                    ip_url += `?country_code=${userData.country_code}`;
+
+                console.log(ip_url);
+                fetch(ip_url)
+                    .then(res => res.json())
+                    .then(data => {
+                        const { facilities, user, reserved } = data;
+                        if (reserved)
+                            return;
+
+                        if (!userData.country_code)
+                            userData.country_code = user.country_code;
+
+                        for (const fac of facilities) {
+                            const fac_id = fac.id;
+                            if (!tabData[tabId].facilities[fac_id])
+                                tabData[tabId].facilities[fac_id] = fac;
+                        }
+                        browser.runtime.sendMessage(
+                            { type: MessageTypes.UPDATE_FACILITIES, tabId, data: tabData[tabId].facilities }
+                        ).catch(() => { });
+                    })
+                    .catch(err => {
+                        console.log(err)
+                    });
+            }
 
         } else {
             // Update entry
@@ -94,12 +131,12 @@ browser.webRequest.onResponseStarted.addListener(
                     tabData[tabId].entries[ip].durationMs = durationMs;
             }
 
-            browser.runtime.sendMessage({ type: 'update_entry', tabId, data: tabData[tabId].entries[ip] }).catch(() => { });
+            browser.runtime.sendMessage({ type: MessageTypes.UPDATE_ENTRY, tabId, data: tabData[tabId].entries[ip] }).catch(() => { });
         }
 
         browser.runtime.sendMessage(
             {
-                type: 'counts',
+                type: MessageTypes.COUNTS,
                 tabId,
                 data: { cachedCount: tabData[tabId].cachedCount, requestsCount: tabData[tabId].requestsCount }
             }
@@ -115,6 +152,8 @@ browser.tabs.onRemoved.addListener((tabId) => {
 
 browser.webNavigation?.onBeforeNavigate?.addListener((details) => {
     if (details.frameId === 0) {
-        tabData[details.tabId] = { pageUrl: details.url, cachedCount: 0, requestsCount: 0, entries: {} };
+        tabData[details.tabId] = { pageUrl: details.url, cachedCount: 0, requestsCount: 0, entries: {}, facilities: {} };
     }
 });
+
+handleStartup();

@@ -1,5 +1,5 @@
 import * as browser from "webextension-polyfill";
-import { Entry, PageData } from "../types";
+import { Datacenter, Entry, MessageTypes, PageData } from "../types";
 
 let currentTabId: number;
 let currentEntries: { [key: string]: Entry } = {};
@@ -8,17 +8,19 @@ browser.runtime.onMessage.addListener(async (message: any, _sender: browser.Runt
     if (message.tabId != currentTabId)
         return;
 
-    if (message.type === "new_entry") {
+    if (message.type == MessageTypes.NEW_ENTRY) {
         const entry: Entry = message.data;
         currentEntries[entry.ip] = entry;
         addEntry(entry);
-    } else if (message.type === "update_entry") {
+    } else if (message.type == MessageTypes.UPDATE_ENTRY) {
         const entry: Entry = message.data;
         currentEntries[entry.ip] = entry;
         updateEntry(entry);
-    } else if (message.type === "counts") {
+    } else if (message.type == MessageTypes.COUNTS) {
         const { cachedCount, requestsCount } = message.data;
         updateCounts(cachedCount, requestsCount);
+    } else if (message.type == MessageTypes.UPDATE_FACILITIES) {
+        updateFacilities(message.data);
     }
 });
 
@@ -28,7 +30,7 @@ async function load() {
 
     currentTabId = tab.id ? tab.id : 0;
 
-    browser.runtime.sendMessage({ type: 'get_tab_data', tabId: tab.id }).then((response: any) => {
+    browser.runtime.sendMessage({ type: MessageTypes.GET_TAB_DATA, tabId: tab.id }).then((response: any) => {
         if (!response)
             return;
 
@@ -42,6 +44,7 @@ async function load() {
 
         updateCounts(cachedCount, requestsCount);
         updateUrl(pageData.pageUrl);
+        updateFacilities(pageData.facilities);
     });
 }
 
@@ -139,6 +142,12 @@ function updateCounts(cachedCount: number, requestsCount: number) {
 
     if (ipCounter)
         ipCounter.innerHTML = Object.keys(entryElements).length.toString();
+}
+
+function updateFacilities(datacenters: { [key: number]: Datacenter }) {
+    const facilityCounter = document.getElementById("facility-count");
+    if (facilityCounter)
+        facilityCounter.innerHTML = Array.from(Object.keys(datacenters)).length.toString();
 }
 
 load();

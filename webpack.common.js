@@ -1,5 +1,6 @@
 const path = require("path");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
+const Dotenv = require('dotenv-webpack');
 
 module.exports = {
     entry: {
@@ -7,7 +8,7 @@ module.exports = {
         "popup/script": "./src/popup/script.ts"
     },
     resolve: {
-        extensions: ['ts', 'js']
+        extensions: ['.ts', '.js']
     },
     output: {
         path: path.resolve(__dirname, "dist"),
@@ -29,6 +30,7 @@ module.exports = {
             patterns: [
                 { from: "src", to: ".", globOptions: { ignore: ["**/*.js", "**/*.ts"] } }
             ]
-        })
+        }),
+        new Dotenv()
     ]
 };
