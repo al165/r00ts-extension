@@ -9,6 +9,9 @@ let currentEntries: { [key: string]: Entry } = {};
 let map: maplibregl.Map;
 
 let markers: { [key: number]: Marker } = {};
+let facility_ids: number[] = [];
+
+let bounds: LngLatBounds;
 
 browser.runtime.onMessage.addListener(async (message: any, _sender: browser.Runtime.MessageSender) => {
     if (message.tabId != currentTabId)
@@ -37,6 +40,19 @@ async function load() {
 
     currentTabId = tab.id ? tab.id : 0;
 
+    setWorkerUrl(browser.runtime.getURL('maplibre-gl-csp-worker.js'));
+    map = new Map({
+        container: 'map',
+        style: 'https://tiles.openfreemap.org/styles/liberty',
+        interactive: false
+    });
+
+    map.on('load', () => {
+        if (bounds?._ne)
+            map.fitBounds(bounds, { padding: 40, animate: false, maxZoom: 14 });
+
+    });
+
     browser.runtime.sendMessage({ type: MessageTypes.GET_TAB_DATA, tabId: tab.id }).then((response: any) => {
         if (!response)
             return;
@@ -53,12 +69,13 @@ async function load() {
         updateFacilities(pageData.facilities);
     });
 
-    setWorkerUrl(browser.runtime.getURL('maplibre-gl-csp-worker.js'));
-    map = new Map({
-        container: 'map',
-        style: 'https://tiles.openfreemap.org/styles/liberty',
-        interactive: false
+    document.getElementById('details-btn')?.addEventListener('click', () => {
+        console.log('clicked for details');
+        //console.log(facility_ids);
+        //console.log(JSON.stringify(currentEntries, null, 2));
+        browser.tabs.create({ url: `http://localhost:5173/?ids=${JSON.stringify(facility_ids)}` });
     });
+
 }
 
 function isIPv6(ip: string) {
@@ -159,11 +176,18 @@ function updateCounts(cachedCount: number, requestsCount: number) {
 
 function updateFacilities(datacenters: { [key: number]: Datacenter }) {
     const facilityCounter = document.getElementById("facility-count");
+    const numFacilities = Array.from(Object.keys(datacenters)).length.toString();
     if (facilityCounter)
-        facilityCounter.innerHTML = Array.from(Object.keys(datacenters)).length.toString();
+        facilityCounter.innerHTML = numFacilities;
 
     if (!map)
         return;
+
+    if (numFacilities) {
+        const detailsBtn = document.getElementById('details-btn') as HTMLButtonElement;
+        if (detailsBtn)
+            detailsBtn.disabled = false;
+    }
 
     for (const fac_id of Object.keys(datacenters)) {
         const id = parseInt(fac_id);
@@ -173,14 +197,17 @@ function updateFacilities(datacenters: { [key: number]: Datacenter }) {
                 .setLngLat([facility.lon, facility.lat])
                 .addTo(map);
             markers[id] = marker;
+            facility_ids.push(id);
         }
     }
 
-    const bounds = Object.values(markers).reduce((bounds, marker) => {
+    bounds = Object.values(markers).reduce((bounds, marker) => {
         return bounds.extend(marker.getLngLat());
     }, new LngLatBounds());
 
-    map.fitBounds(bounds, { padding: 20 });
+    if (bounds._ne)
+        map.fitBounds(bounds, { padding: 40, maxZoom: 14 });
+
 }
 
 load();

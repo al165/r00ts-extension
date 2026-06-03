@@ -124,6 +124,18 @@ button {
   cursor: pointer;
 }
 
+#details-btn {
+  padding: 0.5em;
+  margin: 0.5em 0;
+  border: none;
+  background: var(--accent);
+  color: var(--text);
+}
+
+#details-btn:hover {
+  border: none;
+}
+
 /* Page URL bar */
 .page-url-bar {
   padding: 8px 16px;
