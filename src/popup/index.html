@@ -8,41 +8,42 @@
     <title>r00ts</title>
   </head>
   <body>
-    <div id="output"></div>
-    <div class="header">
-      <div class="logo">
-        <span class="logo-title">🫚 r00ts</span>
+    <div id="contents">
+      <div id="map-container">
+        <h1>r00ts</h1>
+        <div id="map-buildings" class="map-overlay fill"></div>
+        <div id="map" class="fill"></div>
+        <canvas class="map-overlay fill" id="glyph-render"></canvas>
+        <div id="ip-info">
+          <table>
+            <tbody id="ip-table"></tbody>
+          </table>
+          <span id="hint-text">Start navigating on the web to start collecting datacenters!</span>
+          <button id="details-btn" disabled>See details...</button>
+        </div>
+        <div id="stats">
+          <table>
+            <tbody>
+              <tr>
+                <td>Unique IPs:</td>
+                <td id="ip-count">0</td>
+              </tr>
+              <tr>
+                <td>Datacenters:</td>
+                <td id="facility-count">0</td>
+              </tr>
+              <tr>
+                <td>Requests:</td>
+                <td id="req-count">0</td>
+              </tr>
+              <tr>
+                <td>(Cached):</td>
+                <td id="cached-count">0</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-      <div class="header-actions">
-        <button class="btn" id="btn-clear">Clear</button>
-      </div>
-    </div>
-    <!-- Map elements -->
-    <div id="map-container">
-      <div id="map-buildings" class="map-overlay fill"></div>
-      <div id="map" class="fill"></div>
-      <canvas class="map-overlay fill" id="glyph-render"></canvas>
-    </div>
-    <!-- -->
-    <button id="details-btn" disabled>See details...</button>
-    <div class="col-headers">
-      <span class="col-header">IP Address</span>
-      <span class="col-header">Host</span>
-      <span class="col-header">Network</span>
-      <span class="col-header" style="text-align:right">Requests</span>
-      <span class="col-header" style="text-align:right">Time</span>
-    </div>
-    <div class="entries" id="entries-list">
-      <div class="empty-state" id="empty-state">
-        <div class="empty-icon">⬡</div>
-        <div class="empty-title">No requests captured yet</div>
-        <div class="empty-sub">Navigate to a page to see IP addresses</div>
-      </div>
-    </div>
-    <div class="footer">
-      <span class="footer-stat">Unique IPs: <span id="ip-count">0</span></span>
-      <span class="footer-stat">Possible Datacenters: <span id="facility-count">0</span></span>
-      <span class="footer-stat">Requests: <span id="req-count">0</span> (Cached: <span id="cached-count">0</span>)</span>
     </div>
     <script src="script.js" defer></script>
   </body>

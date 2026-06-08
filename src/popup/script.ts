@@ -4,7 +4,7 @@ window.addEventListener('unhandledrejection', (e) => console.log('unhandled reje
 import * as browser from "webextension-polyfill";
 import { Datacenter, Entry, MessageTypes, PageData } from "../types";
 
-import { LngLatBounds, Map, Marker, setWorkerUrl } from 'maplibre-gl';
+import { AttributionControl, LngLatBounds, Map, Marker, setWorkerUrl } from 'maplibre-gl';
 
 import { MapRaseriser } from "./glyphRenderer";
 import mapBuildingsStyle from "./osm_buildings.json";
@@ -131,13 +131,21 @@ async function load() {
         container: 'map-buildings',
         style: mapBuildingsStyle as maplibregl.StyleSpecification,
         interactive: true,
+        attributionControl: false
     });
 
     map = new Map({
         container: 'map',
         style: mapStyle as maplibregl.StyleSpecification,
-        interactive: true
+        interactive: true,
+        attributionControl: false
     });
+
+    map.addControl(new AttributionControl({
+        compact: true, customAttribution: [
+            "MapBox"
+        ]
+    }), 'bottom-left');
 
     mapCanvas = map.getCanvas();
     mapCanvas.style.opacity = "0";
@@ -231,50 +239,51 @@ function updateUrl(url: string) {
 }
 
 function addEntry(entry: Entry) {
-    const entriesList = document.getElementById('entries-list');
-    const emptyState = document.getElementById('empty-state');
+    const entriesList = document.getElementById('ip-info');
 
     if (!entriesList)
         return;
 
-    if (emptyState)
-        emptyState.style.display = 'none';
+    if (Object.keys(entryElements).length == 0) {
+        entriesList.querySelector('#hint-text')?.remove();
+        const details_btn = entriesList.querySelector('#details-btn') as HTMLElement;
+        if (details_btn)
+            details_btn.style.display = 'block';
+    }
 
-    const row = document.createElement('div');
+    const table = entriesList.querySelector('#ip-table');
+    if (!table)
+        return;
+
+    const row = document.createElement('tr');
     row.className = 'entry';
 
     const ipv6 = isIPv6(entry.ip);
-    const ip_el = document.createElement('span');
+    const ip_el = document.createElement('td');
     ip_el.classList.add("entry-ip");
     if (ipv6)
         ip_el.classList.add("ipv6");
     ip_el.innerText = entry.ip;
 
-    const host_el = document.createElement('span');
+    const host_el = document.createElement('td');
     host_el.classList.add('entry-host');
     host_el.innerText = entry.hostname;
 
-    const network_name = '??';
-
-    const network_btn = document.createElement('button');
-    network_btn.classList.add("entry-type");
-    network_btn.innerText = network_name;
-
-    const count_el = document.createElement('span');
+    const count_el = document.createElement('td');
     count_el.classList.add('entry-count');
     count_el.innerText = entry.count.toString();
 
-    const time_el = document.createElement('span');
+    const time_el = document.createElement('td');
     time_el.classList.add('entry-time');
     time_el.innerText = entry.durationMs ? `${Math.round(entry.durationMs)}ms` : "-";
 
     row.appendChild(ip_el);
     row.appendChild(host_el);
-    row.appendChild(network_btn);
+    // row.appendChild(network_btn);
     row.appendChild(count_el);
     row.appendChild(time_el);
 
-    entriesList.appendChild(row);
+    table.appendChild(row);
 
     entryElements[entry.ip] = row;
 }
