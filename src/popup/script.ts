@@ -220,7 +220,7 @@ async function load() {
         };
         console.log(JSON.stringify(data, null, 2));
         const data64 = btoa(JSON.stringify(data));
-        browser.tabs.create({ url: `http://localhost:5173/?data=${data64}` });
+        browser.tabs.create({ url: `${process.env.API_ENDPOINT}?data=${data64}` });
     });
 
 }
