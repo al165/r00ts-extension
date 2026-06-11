@@ -141,12 +141,6 @@ async function load() {
         attributionControl: false
     });
 
-    map.addControl(new AttributionControl({
-        compact: true, customAttribution: [
-            "MapBox"
-        ]
-    }), 'bottom-left');
-
     mapCanvas = map.getCanvas();
     mapCanvas.style.opacity = "0";
 
@@ -167,7 +161,7 @@ async function load() {
         console.log('map.on load');
 
         if (bounds?._ne)
-            map.fitBounds(bounds, { padding: 40, animate: false, maxZoom: 14 });
+            map.fitBounds(bounds, { padding: { left: 200, top: 80, right: 80, bottom: 80 }, animate: false, maxZoom: 14 });
 
         new ResizeObserver(() =>
             rasteriser.resize(mapCanvas.width, mapCanvas.height),
@@ -388,7 +382,7 @@ function updateFacilities(datacenters: { [key: number]: Datacenter }) {
     }, new LngLatBounds());
 
     if (bounds._ne)
-        map?.fitBounds(bounds, { padding: 40, maxZoom: 14 });
+        map?.fitBounds(bounds, { padding: { left: 200, top: 80, right: 80, bottom: 80 }, maxZoom: 14 });
 
 }
 

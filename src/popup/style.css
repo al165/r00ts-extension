@@ -33,6 +33,15 @@ body {
     font-size: 13px;
     display: flex;
     flex-direction: column;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+a {
+    color: blue;
+}
+
+a:visited {
+    color: blue;
 }
 
 #contents {
@@ -255,4 +264,15 @@ td {
     font-size: 11px;
     text-align: right;
     width: 100%;
+}
+
+footer {
+    position: fixed;
+    bottom: 0;
+    display: flex;
+    width: 100%;
+    padding: 0 1em;
+    box-sizing: border-box;
+    justify-content: space-between;
+    font-size: 8pt;
 }
