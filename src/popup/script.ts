@@ -45,7 +45,7 @@ class DatacenterMarker {
     title: HTMLSpanElement;
     markerImg: HTMLDivElement;
 
-    constructor(facility: Datacenter) {
+    constructor(facility: Datacenter, open_on_load = false) {
         this.facility = facility;
 
         const element = document.createElement('div');
@@ -81,6 +81,9 @@ class DatacenterMarker {
                         </img>
                     `;
 
+                    if (open_on_load)
+                        this.open();
+
                 }).catch(err => {
                     console.error(err);
                 })
@@ -94,7 +97,6 @@ class DatacenterMarker {
             if (this.focused) {
                 this.close();
             } else {
-                openingMarker = true;
                 this.open();
             }
         });
@@ -103,6 +105,8 @@ class DatacenterMarker {
     open() {
         if (currentMarker != null)
             currentMarker.close();
+
+        openingMarker = true;
 
         this.markerRoot.appendChild(this.title);
         this.markerImg.classList.remove("marker-small");
@@ -208,6 +212,10 @@ async function handleMessage(message: any, _sender: browser.Runtime.MessageSende
             network_datacenters[parseInt(net_id)] = Array.from(message.data.networkDatacenters[parseInt(net_id)]);
         }
     }
+    else if (message.type == MessageTypes.PAGE_UPDATE) {
+        // new host name etc
+        updateSummary(message.data as PageData);
+    }
 }
 
 browser.runtime.onMessage.addListener(handleMessage);
@@ -251,7 +259,7 @@ async function load() {
     );
 
     map.on('load', () => {
-        fitAll(false);
+        //fitAll(false);
 
         new ResizeObserver(() =>
             rasteriser.resize(mapCanvas.width, mapCanvas.height),
@@ -279,8 +287,6 @@ async function load() {
     syncMaps(map, mapBuildingsLayer);
 
     browser.runtime.sendMessage({ type: MessageTypes.GET_TAB_DATA, tabId: tab.id }).then((response: any) => {
-        console.log('browser.runtime.sendMessage');
-
         if (!response) {
             console.log('.. no response.');
 
@@ -298,6 +304,7 @@ async function load() {
         updateCounts(cachedCount, requestsCount);
         updateUrl(pageData.pageUrl);
         updateFacilities(pageData.facilities);
+        updateSummary(pageData);
 
         network_ids = Object.keys(networks).map(k => parseInt(k));
         network_datacenters = {};
@@ -438,19 +445,46 @@ function updateFacilities(datacenters: { [key: number]: Datacenter }) {
             detailsBtn.disabled = false;
     }
 
+    const cities = new Set<string>();
     for (const fac_id of Object.keys(datacenters)) {
         const id = parseInt(fac_id);
+        cities.add(datacenters[id].city);
         if (!markers[id]) {
             const facility = datacenters[id];
 
-            const marker = new DatacenterMarker(facility);
+
+            const marker = new DatacenterMarker(facility, Object.keys(markers).length == 0);
             markers[id] = marker;
+
 
             facility_ids.push(id);
         }
     }
 
-    fitAll();
+    const cityNames = Array.from(cities);
+    const cityInfo = document.getElementById('cities');
+    if (cityInfo) {
+        if (cityNames.length == 0)
+            cityInfo.innerHTML = `unknown location`;
+        else if (cityNames.length == 1)
+            cityInfo.innerHTML = cityNames[0];
+        else {
+            if (Object.keys(currentEntries).length == 1)
+                cityInfo.innerHTML = `one of ${cityNames.length} cities`;
+            else
+                cityInfo.innerHTML = `up to ${cityNames.length} cities`;
+        }
+    }
+}
+
+function updateSummary(data: PageData) {
+    const hostname = document.getElementById('hostname');
+    if (hostname)
+        hostname.innerText = data.pageUrl;
+
+    const cta = document.getElementById('cta');
+    if (cta)
+        cta.style.display = 'block';
 }
 
 function fitAll(animate: boolean = true) {

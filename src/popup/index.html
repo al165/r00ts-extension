@@ -15,34 +15,16 @@
         <div id="map" class="fill"></div>
         <button id="fit-btn">fit all</button>
         <canvas class="map-overlay fill" id="glyph-render"></canvas>
+        <div id="cta">
+          <h2><span id="hostname">URL</span> might live here</h2>
+          <span id="summary">Rooted on <span id="ip-count">0</span> IP addresses in <span id="cities">0 cities</span></span>
+          <button id="details-btn">&gt;</button>
+        </div>
         <div id="ip-info">
           <table>
             <tbody id="ip-table"></tbody>
           </table>
           <span id="hint-text">Start navigating on the web to start collecting datacenters!</span>
-          <button id="details-btn" disabled>See details...</button>
-        </div>
-        <div id="stats">
-          <table>
-            <tbody>
-              <tr>
-                <td>Unique IPs:</td>
-                <td id="ip-count">0</td>
-              </tr>
-              <tr>
-                <td>Datacenters:</td>
-                <td id="facility-count">0</td>
-              </tr>
-              <tr>
-                <td>Requests:</td>
-                <td id="req-count">0</td>
-              </tr>
-              <tr>
-                <td>(Cached):</td>
-                <td id="cached-count">0</td>
-              </tr>
-            </tbody>
-          </table>
         </div>
       </div>
     </div>

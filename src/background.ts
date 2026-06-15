@@ -22,6 +22,17 @@ function handleMessage(msg: any, _sender: browser.Runtime.MessageSender, sendRes
     return true;
 }
 
+browser.tabs.onUpdated.addListener((tabId, change) => {
+    if (change.url) {
+        const urlObject = new URL(change.url)
+        const newUrl = urlObject.hostname.length ? urlObject.hostname : change.url;
+        if (tabData[tabId] && tabData[tabId].pageUrl != newUrl) {
+            // Reset
+            browser.runtime.sendMessage({ type: MessageTypes.PAGE_UPDATE, tabId, data: tabData[tabId] }).catch(() => { });
+        }
+    }
+});
+
 browser.runtime.onMessage.addListener(handleMessage);
 
 browser.webRequest.onBeforeRequest.addListener(
@@ -62,7 +73,8 @@ browser.webRequest.onResponseStarted.addListener(
 
         if (type == "main_frame") {
             // Top level page
-            tabData[tabId].pageUrl = url;
+            const urlObject = new URL(url);
+            tabData[tabId].pageUrl = urlObject.hostname.length ? urlObject.hostname : url;
             tabData[tabId].entries = {};
         }
 
@@ -104,7 +116,7 @@ browser.webRequest.onResponseStarted.addListener(
                 else if (userData.country_code)
                     ip_url += `?country_code=${userData.country_code}`;
 
-                console.log(`${hostname}   ${ip_url}`);
+                // console.log(`${hostname}   ${ip_url}`);
                 fetch(ip_url)
                     .then(res => res.json())
                     .then(data => {

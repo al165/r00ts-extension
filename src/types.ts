@@ -57,5 +57,6 @@ export enum MessageTypes {
     NEW_ENTRY,
     UPDATE_ENTRY,
     COUNTS,
-    UPDATE_FACILITIES
+    UPDATE_FACILITIES,
+    PAGE_UPDATE,
 };
