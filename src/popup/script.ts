@@ -109,6 +109,7 @@ class DatacenterMarker {
         openingMarker = true;
 
         this.markerRoot.appendChild(this.title);
+        this.markerRoot.classList.add('front');
         this.markerImg.classList.remove("marker-small");
 
         map.flyTo({
@@ -127,6 +128,7 @@ class DatacenterMarker {
     close() {
         currentMarker = null;
         this.markerRoot.removeChild(this.title);
+        this.markerRoot.classList.remove('front');
         this.markerImg.classList.add("marker-small");
     }
 };
@@ -287,11 +289,8 @@ async function load() {
     syncMaps(map, mapBuildingsLayer);
 
     browser.runtime.sendMessage({ type: MessageTypes.GET_TAB_DATA, tabId: tab.id }).then((response: any) => {
-        if (!response) {
-            console.log('.. no response.');
-
+        if (!response)
             return;
-        }
 
         const pageData: PageData = response;
         const { cachedCount, requestsCount, networks, networksDatacenters } = pageData;
@@ -361,6 +360,8 @@ function addEntry(entry: Entry) {
 
     if (!entriesList)
         return;
+
+    entriesList.style.display = 'block';
 
     if (Object.keys(entryElements).length == 0) {
         entriesList.querySelector('#hint-text')?.remove();

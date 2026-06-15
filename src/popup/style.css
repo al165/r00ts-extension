@@ -178,8 +178,7 @@ button {
 #ip-info {
   top: 2em;
   left: 1em;
-  display: flex;
-  flex-direction: column;
+  display: none;
 }
 
 #hint-text {
@@ -213,6 +212,7 @@ button {
 
 /* Column headers */
 td {
+  box-sizing: border-box;
   padding: 0 4px;
 }
 
@@ -243,6 +243,7 @@ td {
   font-weight: 600;
   color: var(--text);
   width: 120px;
+  display: block;
 }
 
 .entry-ip.ipv6 {
