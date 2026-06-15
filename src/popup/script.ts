@@ -328,6 +328,19 @@ async function load() {
 
     document.getElementById('fit-btn')?.addEventListener('click', () => fitAll());
 
+
+    const expandTableBtn = document.getElementById('expand-ip-table');
+    if (expandTableBtn)
+        expandTableBtn.addEventListener('click', () => {
+            const tableContainer = document.getElementById('ip-table-container');
+
+
+            if (tableContainer)
+                if (tableContainer.classList.toggle('ip-table-closed'))
+                    expandTableBtn.innerText = ">";
+                else
+                    expandTableBtn.innerText = "<";
+        });
 }
 
 function isIPv6(ip: string) {
@@ -356,7 +369,7 @@ function addEntry(entry: Entry) {
             details_btn.style.display = 'block';
     }
 
-    const table = entriesList.querySelector('#ip-table');
+    const table = entriesList.querySelector('#ip-body');
     if (!table)
         return;
 
