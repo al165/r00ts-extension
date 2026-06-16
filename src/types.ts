@@ -23,7 +23,8 @@ export type Entry = {
     count: number,
     durationMs?: number,
     network_id?: number,
-    clue?: Clue
+    clue?: Clue,
+    fetched: boolean
 };
 
 export type PageData = {
@@ -54,6 +55,7 @@ export type Clue = {
 
 export enum MessageTypes {
     GET_TAB_DATA,
+    FETCH_ENTRY_DATA,
     NEW_ENTRY,
     UPDATE_ENTRY,
     COUNTS,

@@ -410,6 +410,12 @@ function addEntry(entry: Entry) {
     table.appendChild(row);
 
     entryElements[entry.ip] = row;
+
+    if (!entry.fetched) {
+        browser.runtime.sendMessage({ type: MessageTypes.FETCH_ENTRY_DATA, tabId: currentTabId, ip: entry.ip }).then(res => {
+            console.log(res);
+        });
+    }
 }
 
 function updateEntry(entry: Entry) {
@@ -466,10 +472,8 @@ function updateFacilities(datacenters: { [key: number]: Datacenter }) {
         if (!markers[id]) {
             const facility = datacenters[id];
 
-
             const marker = new DatacenterMarker(facility, Object.keys(markers).length == 0);
             markers[id] = marker;
-
 
             facility_ids.push(id);
         }

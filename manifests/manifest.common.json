@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "r00ts",
     "description": "r00ts connects you to the datacenters that serve your everyday internet",
-    "version": "0.3",
+    "version": "0.4",
     "action": {
         "default_popup": "popup/index.html"
     },

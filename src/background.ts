@@ -14,12 +14,91 @@ function handleMessage(msg: any, _sender: browser.Runtime.MessageSender, sendRes
     console.log("handleMessage", MessageTypes[msg.type]);
     if (msg.type == MessageTypes.GET_TAB_DATA) {
         const { tabId } = msg;
-        if (tabId)
-            sendResponse(tabData[tabId]);
+
+        if (tabId == undefined)
+            return true;
+
+        sendResponse(tabData[tabId]);
+        return true;
+    } else if (msg.type == MessageTypes.FETCH_ENTRY_DATA) {
+        const { tabId, ip } = msg;
+
+        if (tabId == undefined || !ip)
+            return true;
+
+        getEntryData(tabId, ip);
+        sendResponse({ ok: true });
         return true;
     }
 
     return true;
+}
+
+function getEntryData(tabId: number, ip: string) {
+    if (!process.env.API_ENDPOINT || !tabData[tabId]?.entries[ip])
+        return;
+
+
+    const { clue } = tabData[tabId].entries[ip];
+
+    let ip_url = `${process.env.API_ENDPOINT}/api/ip/${ip}`;
+    if (clue && (clue.countryCode || clue.city)) {
+        const clueParams = new URLSearchParams();
+
+        if (clue?.countryCode)
+            clueParams.append('country_code', clue.countryCode);
+
+        if (clue?.city)
+            clueParams.append('city', clue.city);
+
+        ip_url += `?${clueParams.toString()}`;
+    }
+    else if (userData.country_code)
+        ip_url += `?country_code=${userData.country_code}`;
+
+    fetch(ip_url)
+        .then(res => res.json())
+        .then(data => {
+            const { facilities, user, reserved, network } = data;
+            if (reserved || !facilities || !network)
+                return;
+
+            if (!userData.country_code && user?.country_code)
+                userData.country_code = user.country_code;
+
+            for (const fac of facilities as Datacenter[]) {
+                const fac_id = fac.id;
+                // console.log(JSON.stringify(fac, null, 2));
+                if (!tabData[tabId].facilities[fac_id])
+                    tabData[tabId].facilities[fac_id] = fac;
+
+                if (!tabData[tabId].networksDatacenters[network.id])
+                    tabData[tabId].networksDatacenters[network.id] = new Set();
+
+                tabData[tabId].networksDatacenters[network.id].add(fac_id);
+            }
+            tabData[tabId].entries[ip].network_id = network.id;
+            tabData[tabId].entries[ip].fetched = true;
+            tabData[tabId].networks[network.id] = network;
+
+            browser.runtime.sendMessage(
+                {
+                    type: MessageTypes.UPDATE_FACILITIES,
+                    tabId,
+                    data: {
+                        facilities: tabData[tabId].facilities,
+                        networks: tabData[tabId].networks,
+                        networksDatacenters: tabData[tabId].networksDatacenters
+                    }
+
+                }
+            ).catch(() => { });
+        })
+        .catch(err => {
+            console.log(`Error fetching ip_url:`);
+            console.log(err)
+        });
+
 }
 
 browser.tabs.onUpdated.addListener((tabId, change) => {
@@ -92,74 +171,14 @@ browser.webRequest.onResponseStarted.addListener(
                 hostname,
                 count: 1,
                 durationMs,
-                clue
+                clue,
+                fetched: false
             };
 
             tabData[tabId].entries[ip] = entry;
             tabData[tabId].requestsCount += 1;
 
             browser.runtime.sendMessage({ type: MessageTypes.NEW_ENTRY, tabId, data: entry }).catch(() => { });
-
-            if (process.env.API_ENDPOINT) {
-                let ip_url = `${process.env.API_ENDPOINT}/api/ip/${ip}`;
-                if (clue && (clue.countryCode || clue.city)) {
-                    const clueParams = new URLSearchParams();
-
-                    if (clue?.countryCode)
-                        clueParams.append('country_code', clue.countryCode);
-
-                    if (clue?.city)
-                        clueParams.append('city', clue.city);
-
-                    ip_url += `?${clueParams.toString()}`;
-                }
-                else if (userData.country_code)
-                    ip_url += `?country_code=${userData.country_code}`;
-
-                // console.log(`${hostname}   ${ip_url}`);
-                fetch(ip_url)
-                    .then(res => res.json())
-                    .then(data => {
-                        const { facilities, user, reserved, network } = data;
-                        if (reserved || !facilities || !network)
-                            return;
-
-                        if (!userData.country_code && user?.country_code)
-                            userData.country_code = user.country_code;
-
-                        for (const fac of facilities as Datacenter[]) {
-                            const fac_id = fac.id;
-                            // console.log(JSON.stringify(fac, null, 2));
-                            if (!tabData[tabId].facilities[fac_id])
-                                tabData[tabId].facilities[fac_id] = fac;
-
-                            if (!tabData[tabId].networksDatacenters[network.id])
-                                tabData[tabId].networksDatacenters[network.id] = new Set();
-
-                            tabData[tabId].networksDatacenters[network.id].add(fac_id);
-                        }
-                        tabData[tabId].entries[ip].network_id = network.id;
-                        tabData[tabId].networks[network.id] = network;
-
-                        browser.runtime.sendMessage(
-                            {
-                                type: MessageTypes.UPDATE_FACILITIES,
-                                tabId,
-                                data: {
-                                    facilities: tabData[tabId].facilities,
-                                    networks: tabData[tabId].networks,
-                                    networksDatacenters: tabData[tabId].networksDatacenters
-                                }
-
-                            }
-                        ).catch(() => { });
-                    })
-                    .catch(err => {
-                        console.log(`Error fetching ip_url:`);
-                        console.log(err)
-                    });
-            }
-
         } else {
             // Update entry
             tabData[tabId].entries[ip].count += 1;
