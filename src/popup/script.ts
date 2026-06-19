@@ -318,7 +318,7 @@ async function load() {
             entries: currentEntries,
             pageUrl,
         };
-        console.log(JSON.stringify(data, null, 2));
+        //console.log(JSON.stringify(data, null, 2));
         const data64 = btoa(JSON.stringify(data));
         browser.tabs.create({ url: `${process.env.API_ENDPOINT}?data=${data64}` });
     });

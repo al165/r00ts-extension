@@ -18,7 +18,20 @@ function handleMessage(msg: any, _sender: browser.Runtime.MessageSender, sendRes
         if (tabId == undefined)
             return true;
 
-        sendResponse(tabData[tabId]);
+        if (!tabData[tabId].pageUrl) {
+            browser.tabs.get(tabId).then(tab => {
+                if (tab.url) {
+                    const urlObject = new URL(tab.url);
+                    tabData[tabId].pageUrl = urlObject.hostname;
+                }
+
+                sendResponse(tabData[tabId]);
+            }).catch(err => {
+                console.error(err);
+            });
+        } else
+            sendResponse(tabData[tabId]);
+
         return true;
     } else if (msg.type == MessageTypes.FETCH_ENTRY_DATA) {
         const { tabId, ip } = msg;
