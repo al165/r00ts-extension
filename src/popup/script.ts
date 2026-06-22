@@ -326,18 +326,17 @@ async function load() {
     document.getElementById('fit-btn')?.addEventListener('click', () => fitAll());
 
 
-    const expandTableBtn = document.getElementById('expand-ip-table');
-    if (expandTableBtn)
-        expandTableBtn.addEventListener('click', () => {
-            const tableContainer = document.getElementById('ip-table-container');
-
-
-            if (tableContainer)
-                if (tableContainer.classList.toggle('ip-table-closed'))
-                    expandTableBtn.innerText = ">";
-                else
-                    expandTableBtn.innerText = "<";
-        });
+    // const expandTableBtn = document.getElementById('expand-ip-table');
+    // if (expandTableBtn)
+    //     expandTableBtn.addEventListener('click', () => {
+    //         const tableContainer = document.getElementById('ip-table-container');
+    //
+    //         if (tableContainer)
+    //             if (tableContainer.classList.toggle('ip-table-closed'))
+    //                 expandTableBtn.innerText = ">";
+    //             else
+    //                 expandTableBtn.innerText = "<";
+    //     });
 }
 
 function isIPv6(ip: string) {
@@ -361,7 +360,8 @@ function addEntry(entry: Entry) {
 
     entriesList.style.display = 'block';
 
-    if (Object.keys(entryElements).length == 0) {
+    const numRows = Object.keys(entryElements).length;
+    if (numRows == 0) {
         entriesList.querySelector('#hint-text')?.remove();
         const details_btn = entriesList.querySelector('#details-btn') as HTMLElement;
         if (details_btn)
@@ -372,8 +372,14 @@ function addEntry(entry: Entry) {
     if (!table)
         return;
 
+
     const row = document.createElement('tr');
     row.className = 'entry';
+    if (numRows >= 6) {
+        const opacity = Math.max(0, 1 - (numRows - 6) / 4);
+        console.log(opacity);
+        row.style.opacity = opacity.toFixed(2);
+    }
 
     const ipv6 = isIPv6(entry.ip);
     const ip_el = document.createElement('td');
@@ -442,18 +448,23 @@ function updateCounts(cachedCount: number, requestsCount: number) {
     if (cachedCounter)
         cachedCounter.innerHTML = cachedCount.toString();
 
+    const numIps = Object.keys(currentEntries).length;
     if (ipCounter)
-        ipCounter.innerHTML = Object.keys(entryElements).length.toString();
+        if (numIps == 0)
+            ipCounter.innerHTML = 'unknown number of IP addresses';
+        else if (numIps == 1)
+            ipCounter.innerHTML = '<em>1 IP address</em>';
+        else
+            ipCounter.innerHTML = `<em>${numIps}</em> IP addresses`;
 }
 
 function updateFacilities(datacenters: { [key: number]: Datacenter }) {
-    const facilityCounter = document.getElementById("facility-count");
-    const numFacilities = Array.from(Object.keys(datacenters)).length.toString();
-    if (facilityCounter)
-        facilityCounter.innerHTML = numFacilities;
 
     if (!map)
         return;
+
+    const numFacilities = Object.keys(datacenters).length;
+    const numIps = Object.keys(currentEntries).length;
 
     if (numFacilities) {
         const detailsBtn = document.getElementById('details-btn') as HTMLButtonElement;
@@ -475,18 +486,31 @@ function updateFacilities(datacenters: { [key: number]: Datacenter }) {
         }
     }
 
+    const facilityInfo = document.getElementById("facilities");
+    if (facilityInfo) {
+        if (numFacilities == 0)
+            facilityInfo.innerHTML = 'unknown number of datacenters';
+        else if (numFacilities == 1)
+            facilityInfo.innerHTML = '<em>1 datacenter</em>';
+        else
+            if (numIps == 1)
+                facilityInfo.innerHTML = `one of <em>${numFacilities} datacenters</em>`;
+            else
+                facilityInfo.innerHTML = `up to <em>${numFacilities} datacenters</em>`;
+    }
+
     const cityNames = Array.from(cities);
     const cityInfo = document.getElementById('cities');
     if (cityInfo) {
         if (cityNames.length == 0)
             cityInfo.innerHTML = `unknown location`;
         else if (cityNames.length == 1)
-            cityInfo.innerHTML = cityNames[0];
+            cityInfo.innerHTML = `<em>${cityNames[0]}</em>`;
         else {
-            if (Object.keys(currentEntries).length == 1)
-                cityInfo.innerHTML = `one of ${cityNames.length} cities`;
+            if (numIps == 1)
+                cityInfo.innerHTML = `one of <em>${cityNames.length} cities</em>`;
             else
-                cityInfo.innerHTML = `up to ${cityNames.length} cities`;
+                cityInfo.innerHTML = `up to <em>${cityNames.length} cities</em>`;
         }
     }
 }

@@ -1,280 +1,281 @@
 :root {
-  --bg: #fff;
-  --info-bg: #e7e7e7;
-  --border: #f3eeef;
-  --accent: #68FF9E;
-  --accent-dim: rgba(0, 255, 136, 0.12);
-  --text: #21262d;
-  --text-muted: #7d8590;
-  --red: #ff4560;
-  --yellow: #f0a500;
-  --blue: #58a6ff;
-  --marker: #ff5f1f;
+    --bg: #fff;
+    --info-bg: #e7e7e7;
+    --border: #f3eeef;
+    --accent: #68FF9E;
+    --accent-dim: rgba(0, 255, 136, 0.12);
+    --text: #21262d;
+    --text-muted: #7d8590;
+    --red: #ff4560;
+    --yellow: #f0a500;
+    --blue: #58a6ff;
+    --marker: #FF70B3;
 }
 
 * {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 html {
-  width: 800px;
-  height: 600px;
+    width: 800px;
+    height: 600px;
 }
 
 body {
-  width: 800px;
-  height: 600px;
-  max-width: 800px;
-  min-height: 300px;
-  background: var(--bg);
-  color: var(--text);
-  font-size: 13px;
-  display: flex;
-  flex-direction: column;
-  font-family: 'JetBrains Mono', monospace;
+    width: 800px;
+    height: 600px;
+    max-width: 800px;
+    min-height: 300px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    font-family: 'JetBrains Mono', monospace;
 }
 
 a {
-  color: blue;
+    color: blue;
 }
 
 a:visited {
-  color: blue;
+    color: blue;
 }
 
 #contents {
-  padding: 1em;
-  width: 100%;
-  flex-grow: 2;
+    padding: 1em;
+    width: 100%;
+    flex-grow: 2;
 }
 
 /* Header */
 h1 {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 22pt;
-  position: absolute;
-  left: 0.1em;
-  top: -0.5em;
-  z-index: 8;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22pt;
+    position: absolute;
+    left: 0.1em;
+    top: -0.5em;
+    z-index: 8;
 }
 
 /* Buttons */
 button {
-  cursor: pointer;
-  padding: 0.5em;
-  margin: 0.5em 0;
-  border: none;
-  font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+    padding: 0.5em;
+    margin: 0.5em 0;
+    border: none;
+    font-family: 'JetBrains Mono', monospace;
 }
 
 #details-btn {
-  position: absolute;
-  top: 0;
-  left: 100%;
-  height: 100%;
-  background: var(--marker);
-  font-size: 24pt;
-  padding: 0;
-  color: var(--text);
-  aspect-ratio: 1;
-  margin: 0 0 0 12px;
+    display: block;
+    background: var(--marker);
+    font-size: 14pt;
+    padding: 0.5em;
+    color: var(--text);
 }
 
 #details-btn:hover {
-  background: var(--accent);
+    background: var(--accent);
 }
 
 #fit-btn {
-  position: absolute;
-  top: 1em;
-  right: 1em;
-  background: var(--info-bg);
-  z-index: 10;
+    position: absolute;
+    top: 1em;
+    right: 1em;
+    background: var(--info-bg);
+    z-index: 10;
 }
 
 /* Map */
 #map-container {
-  position: relative;
-  width: 100%;
-  height: 100%;
+    position: relative;
+    width: 100%;
+    height: 100%;
 }
 
 #map-container .fill {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
 }
 
 #map-buildings {
-  z-index: 1;
+    z-index: 1;
 }
 
 .marker-root {
-  position: relative;
-  pointer-events: all;
+    position: relative;
+    pointer-events: all;
 }
 
 .marker {
-  max-height: 350px;
-  max-width: 350px;
-  background: var(--marker);
-  padding: 0.8em;
-  transition-property: max-width, max-height, min-width !important;
-  transition-duration: 1s !important;
-  position: relative;
-  cursor: pointer;
-  z-index: 2;
+    max-height: 350px;
+    max-width: 350px;
+    background: var(--marker);
+    padding: 0.8em;
+    transition-property: max-width, max-height, min-width !important;
+    transition-duration: 1s !important;
+    position: relative;
+    cursor: pointer;
+    z-index: 2;
 }
 
 .marker-small {
-  max-width: 100px;
-  max-height: 100px;
+    max-width: 100px;
+    max-height: 100px;
 }
 
 .map-overlay {
-  pointer-events: none;
+    pointer-events: none;
 }
 
 .datacenter-marker {
-  z-index: 2;
-  pointer-events: all;
+    z-index: 2;
+    pointer-events: all;
 }
 
 .datacenter-marker:has(.front) {
-  z-index: 10;
+    z-index: 10;
 }
 
 .aerial {
-  width: 100%;
+    width: 100%;
 }
 
 .aerial img {
-  width: 100%;
+    width: 100%;
 }
 
 .datacenter-title {
-  box-sizing: border-box;
-  position: absolute;
-  left: 0;
-  bottom: 100%;
-  width: max-content;
-  background: var(--marker);
-  padding: 0.6em;
-  font-weight: 600;
+    box-sizing: border-box;
+    position: absolute;
+    left: 0;
+    bottom: 100%;
+    width: max-content;
+    background: var(--marker);
+    padding: 0.6em;
+    font-weight: 600;
 }
 
 #ip-info,
 #stats,
 #cta {
-  position: absolute;
-  background: var(--info-bg);
-  z-index: 10;
+    position: absolute;
+    z-index: 10;
 }
 
 #ip-info {
-  top: 2em;
-  left: 1em;
-  display: none;
+    top: 2em;
+    left: 1em;
+    display: none;
+    background: none;
+    font-size: 16pt;
 }
 
 #hint-text {
-  max-width: 20em;
+    max-width: 20em;
 }
 
 #stats {
-  bottom: 1em;
-  right: 1em;
+    bottom: 1em;
+    right: 1em;
 }
 
 #cta {
-  display: none;
-  bottom: 2em;
-  left: 2em;
-  padding: 0.5em;
-  box-sizing: border-box;
+    display: none;
+    bottom: 1em;
+    left: 2em;
+    padding: 0.5em;
+    box-sizing: border-box;
+}
+
+.transparent-white {
+    padding: 0.5em;
+    background: rgba(255, 255, 255, 0.8);
 }
 
 #hostname {
-  font-style: italic;
+    font-style: italic;
 }
 
 #hostname::before {
-  content: "< ";
+    content: "< ";
 }
 
 #hostname::after {
-  content: " >";
+    content: " >";
 }
 
 /* Column headers */
 td {
-  box-sizing: border-box;
-  padding: 0 4px;
+    box-sizing: border-box;
+    padding: 0 4px;
 }
 
 #ip-table-container {
-  overflow: hidden;
+    overflow: hidden;
 }
 
+.entry-ip,
 .ip-table-closed {
-  width: 120px;
+    width: 250px;
 }
 
 #expand-ip-table {
-  height: 100%;
-  margin: 0;
-  position: absolute;
-  top: 0;
-  left: 100%;
+    height: 100%;
+    margin: 0;
+    position: absolute;
+    top: 0;
+    left: 100%;
 }
 
 .entry {
-  cursor: default;
-  padding: 0, 1em;
+    cursor: default;
+    padding: 0, 1em;
 }
 
 .entry-ip {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text);
-  width: 120px;
-  display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20pt;
+    font-weight: 600;
+    color: var(--text);
+    display: block;
 }
 
 .entry-ip.ipv6 {
-  font-size: 10px;
-  font-style: italic;
+    font-size: 10px;
+    font-style: italic;
 }
 
 .entry-host {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .entry-time,
 .entry-count {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  text-align: right;
-  width: 100%;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-align: right;
+    width: 100%;
 }
 
 footer {
-  position: fixed;
-  bottom: 0;
-  display: flex;
-  width: 100%;
-  padding: 0 1em;
-  box-sizing: border-box;
-  justify-content: space-between;
-  font-size: 8pt;
+    position: fixed;
+    bottom: 0;
+    display: flex;
+    width: 100%;
+    padding: 0 1em;
+    box-sizing: border-box;
+    justify-content: space-between;
+    font-size: 8pt;
 }
