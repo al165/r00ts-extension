@@ -375,7 +375,7 @@ export class MapRaseriser {
             const r = px & 0xFF;
             const g = (px >> 8) & 0xFF;
             const b = (px >> 16) & 0xFF;
-            const col = i / this.cols;
+            const col = Math.floor(i / this.cols);
             const row = i % this.cols;
 
             const glyph = this.rasterPalette.glyphForColour([r, g, b]);
