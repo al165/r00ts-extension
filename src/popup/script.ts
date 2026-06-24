@@ -318,6 +318,11 @@ async function load() {
 
     document.getElementById('fit-btn')?.addEventListener('click', () => fitAll());
 
+    const attribution = document.getElementById("attribution");
+    document.getElementById("attribution-btn")?.addEventListener('click', () => {
+        if (attribution)
+            attribution.classList.toggle('attribution-open');
+    });
 
     // const expandTableBtn = document.getElementById('expand-ip-table');
     // if (expandTableBtn)
@@ -557,7 +562,6 @@ function fitAll(animate: boolean = true) {
 }
 
 window.addEventListener('load', async () => {
-    console.log('load');
     await load();
 });
 

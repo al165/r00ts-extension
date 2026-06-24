@@ -66,6 +66,7 @@ body {
     flex-direction: column;
     font-family: 'GT Pressura Mono', monospace;
     font-variant-numeric: slashed-zero;
+    user-select: none;
 }
 
 a {
@@ -235,7 +236,7 @@ button {
 
 #cta {
     display: none;
-    bottom: 1em;
+    bottom: 2em;
     left: 2em;
     padding: 0.5em;
     box-sizing: border-box;
@@ -311,6 +312,38 @@ td {
     font-size: 11px;
     text-align: right;
     width: 100%;
+}
+
+#attribution-btn {
+    font-family: inherit;
+    font-size: inherit;
+    border: none;
+    background: var(--accent);
+    width: 3em;
+    height: 3em;
+    margin: 0;
+}
+
+#attribution {
+    position: absolute;
+    bottom: 1em;
+    right: 1em;
+    padding: 0;
+    background: white;
+    font-size: 8pt;
+    max-width: 3em;
+    height: 3em;
+    transition: max-width 1s;
+    overflow: hidden;
+    z-index: 10;
+}
+
+.attribution-open {
+    max-width: 100% !important;
+}
+
+#attribution span {
+    padding: 1em;
 }
 
 footer {
