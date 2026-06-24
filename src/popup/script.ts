@@ -9,6 +9,7 @@ import { LngLatBounds, Map, Marker, setWorkerUrl } from 'maplibre-gl';
 import { MapRaseriser } from "./glyphRenderer";
 import mapBuildingsStyle from "./osm_buildings.json";
 import mapStyle from "./osm_surface.json";
+import { padIp } from "./ip_utils";
 
 let currentTabId: number;
 let currentEntries: { [key: string]: Entry } = {};
@@ -365,7 +366,7 @@ function addEntry(entry: Entry) {
 
     const ip_el = document.createElement('td');
     ip_el.classList.add('entry-ip');
-    ip_el.innerText = entry.ip;
+    ip_el.innerText = padIp(entry.ip);
 
     const host_el = document.createElement('td');
     host_el.classList.add('entry-host');

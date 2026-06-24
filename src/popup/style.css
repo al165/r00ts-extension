@@ -12,6 +12,37 @@
     --marker: #FF70B3;
 }
 
+
+@font-face {
+    font-family: "GT Pressura Mono";
+    src:
+        url("https://r00ts.xyz/fonts/GT-Pressura/GT-Pressura-Mono-Bold.woff2") format("woff2"),
+        url("https://r00ts.xyz/fonts/GT-Pressura/GT-Pressura-Mono-Bold.woff") format("woff"),
+        url("https://r00ts.xyz/fonts/GT-Pressura/GT-Pressura-Mono-Bold.ttf") format("truetype");
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "GT Pressura Mono";
+    src:
+        url("https://r00ts.xyz/fonts/GT-Pressura/GT-Pressura-Mono-Light.woff2") format("woff2"),
+        url("https://r00ts.xyz/fonts/GT-Pressura/GT-Pressura-Mono-Light.woff") format("woff"),
+        url("https://r00ts.xyz/fonts/GT-Pressura/GT-Pressura-Mono-Light.ttf") format("truetype");
+    font-weight: lighter;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "GT Pressura Mono";
+    src:
+        url("https://r00ts.xyz/fonts/GT-Pressura/GT-Pressura-Mono-Regular.woff2") format("woff2"),
+        url("https://r00ts.xyz/fonts/GT-Pressura/GT-Pressura-Mono-Regular.woff") format("woff"),
+        url("https://r00ts.xyz/fonts/GT-Pressura/GT-Pressura-Mono-Regular.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -33,7 +64,8 @@ body {
     font-size: 13px;
     display: flex;
     flex-direction: column;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'GT Pressura Mono', monospace;
+    font-variant-numeric: slashed-zero;
 }
 
 a {
@@ -52,12 +84,16 @@ a:visited {
 
 /* Header */
 h1 {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 22pt;
+    font-size: 32pt;
+    font-weight: normal;
     position: absolute;
     left: 0.1em;
     top: -0.5em;
     z-index: 8;
+}
+
+h2 {
+    font-weight: normal;
 }
 
 /* Buttons */
@@ -66,7 +102,7 @@ button {
     padding: 0.5em;
     margin: 0.5em 0;
     border: none;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: inherit;
 }
 
 #details-btn {
@@ -111,6 +147,7 @@ button {
 .marker-root {
     position: relative;
     pointer-events: all;
+    font-family: "GT Pressura Mono", monospace;
 }
 
 .marker {
@@ -156,10 +193,12 @@ button {
     position: absolute;
     left: 0;
     bottom: 100%;
-    width: max-content;
+    width: 100%;
     background: var(--marker);
-    padding: 0.6em;
-    font-weight: 600;
+    padding: 0.8em;
+    padding-bottom: 0;
+    text-align: right;
+    font-weight: normal;
 }
 
 #ip-info,
@@ -248,10 +287,9 @@ td {
 }
 
 .entry-ip {
-    font-family: 'JetBrains Mono', monospace;
     font-size: 20pt;
-    font-weight: 600;
     color: var(--text);
+    white-space-collapse: preserve-spaces;
     display: block;
 }
 
@@ -261,7 +299,6 @@ td {
 }
 
 .entry-host {
-    font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
     color: var(--text);
     white-space: nowrap;
@@ -271,7 +308,6 @@ td {
 
 .entry-time,
 .entry-count {
-    font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
     text-align: right;
     width: 100%;
