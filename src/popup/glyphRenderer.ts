@@ -171,7 +171,7 @@ function colourDistSquared(a: Colour, b: Colour) {
     return (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
 }
 
-function createGlyph(size: number, drawFn: GlyphDrawFn, fg?: Colour | string, bg?: Colour | string) {
+async function createGlyph(size: number, drawFn: GlyphDrawFn, fg?: Colour | string, bg?: Colour | string) {
     const canvas = new OffscreenCanvas(size, size);
     if (typeof canvas === "undefined") {
         console.log("Offscreen canvas is not avaliable");
@@ -195,7 +195,9 @@ function createGlyph(size: number, drawFn: GlyphDrawFn, fg?: Colour | string, bg
     }
     drawFn(ctx, size, fg);
 
-    return canvas;
+    const bitmap = await createImageBitmap(canvas);
+
+    return bitmap;
 }
 
 export class RasteriserPalette {
@@ -207,7 +209,7 @@ export class RasteriserPalette {
 
     private glyphSize: number = 10;
 
-    private glyphCache: Map<number, OffscreenCanvas> = new Map();
+    private glyphCache: Map<number, ImageBitmap> = new Map();
 
     constructor(glyphPaletteCanvas?: HTMLCanvasElement | OffscreenCanvas, glyphSize = 10) {
         if (glyphPaletteCanvas === undefined)
@@ -234,13 +236,13 @@ export class RasteriserPalette {
         this.glyphFunctions[glyphName] = drawFn;
     }
 
-    glyphForColour(colour: Colour): OffscreenCanvas | null {
+    glyphForColour(colour: Colour): ImageBitmap | null {
         if (this.palette.length == 0)
             return null;
 
         const colourKey = (colour[0] & 0xF0) << 4 | (colour[1] & 0xF0) | (colour[2] >> 4);
         if (this.glyphCache.has(colourKey))
-            return this.glyphCache.get(colourKey) as OffscreenCanvas;
+            return this.glyphCache.get(colourKey) as ImageBitmap;
 
         //console.log(`Cache miss: ${colourKey} (size: ${this.glyphCache.size})`);
 
@@ -255,21 +257,21 @@ export class RasteriserPalette {
             }
         }
 
-        if (best.canvas) {
-            this.glyphCache.set(colourKey, best.canvas);
-            return best.canvas;
+        if (best.bitmap) {
+            this.glyphCache.set(colourKey, best.bitmap);
+            return best.bitmap;
         }
 
         return null;
     }
 
-    setGlyphSize(newSize: number) {
+    async setGlyphSize(newSize: number) {
         this.glyphSize = newSize;
 
         // Re-render the glyph palette
         for (const entry of this.palette) {
             const { glyphName, fg, bg } = entry;
-            entry.canvas = createGlyph(this.glyphSize, this.glyphFunctions[glyphName], fg, bg);
+            entry.bitmap = await createGlyph(this.glyphSize, this.glyphFunctions[glyphName], fg, bg);
         }
 
         this.renderGlyphPalette();
@@ -283,14 +285,14 @@ export class RasteriserPalette {
             return;
 
         for (let i = 0; i < this.palette.length; i++) {
-            const { rgb, canvas } = this.palette[i];
+            const { rgb, bitmap } = this.palette[i];
             this.glyphPaletteCtx.fillStyle = colourToString(rgb);
             this.glyphPaletteCtx.fillRect(
                 0, i * this.glyphSize, this.glyphSize, this.glyphSize
             );
 
-            if (canvas != null) {
-                this.glyphPaletteCtx.drawImage(canvas, this.glyphSize, i * this.glyphSize);
+            if (bitmap != null) {
+                this.glyphPaletteCtx.drawImage(bitmap, this.glyphSize, i * this.glyphSize);
             }
         }
     }

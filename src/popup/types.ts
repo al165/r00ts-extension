@@ -23,5 +23,5 @@ export type GlyphParams = {
     rgb: Colour;
     bg?: string | Colour;
     fg?: string | Colour;
-    canvas?: OffscreenCanvas | null;
+    bitmap?: ImageBitmap | null;
 };
