@@ -27,6 +27,7 @@
             "type": "fill",
             "source": "openmaptiles",
             "source-layer": "landuse",
+            "minzoom": 8,
             "maxzoom": 13,
             "filter": [
                 "any",
