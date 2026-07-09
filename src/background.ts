@@ -11,14 +11,25 @@ const tabData: { [key: number]: PageData } = {};
 
 const userData: { country_code?: string } = {};
 
-function getHostname(url: string) {
+export function getHostname(url: string) {
     try {
+        // Need protocol for URL object to work
+        if (!url.startsWith('http'))
+            url = `http://${url}`;
         const urlObject = new URL(url);
-        return urlObject.hostname;
+        let hostname = urlObject.hostname;
+        hostname = hostname.replace(/^www./, '');
+        return hostname;
     } catch {
+        // Manual cleanup
+        url = url.trim();
+        url = url.replace(/^https?:\/\//, '');
+        url = url.replace(/^www./, '');
+        url = url.split('/')[0];
         return url;
     }
 }
+
 
 function handleMessage(msg: any, _sender: browser.Runtime.MessageSender, sendResponse: (res: any) => void): true {
     // console.log("handleMessage", MessageTypes[msg.type]);
