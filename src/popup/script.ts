@@ -314,6 +314,8 @@ async function load() {
         //console.log(JSON.stringify(data, null, 2));
         const data64 = btoa(JSON.stringify(data));
         browser.tabs.create({ url: `${process.env.API_ENDPOINT}?data=${data64}` });
+
+        window.close();
     });
 
     document.getElementById('fit-btn')?.addEventListener('click', () => fitAll());
@@ -323,18 +325,6 @@ async function load() {
         if (attribution)
             attribution.classList.toggle('attribution-open');
     });
-
-    // const expandTableBtn = document.getElementById('expand-ip-table');
-    // if (expandTableBtn)
-    //     expandTableBtn.addEventListener('click', () => {
-    //         const tableContainer = document.getElementById('ip-table-container');
-    //
-    //         if (tableContainer)
-    //             if (tableContainer.classList.toggle('ip-table-closed'))
-    //                 expandTableBtn.innerText = ">";
-    //             else
-    //                 expandTableBtn.innerText = "<";
-    //     });
 }
 
 // ----------------- UI Update functions -----------------
