@@ -1,15 +1,9 @@
 :root {
     --bg: #fff;
     --info-bg: #e7e7e7;
-    --border: #f3eeef;
-    --accent: #68FF9E;
-    --accent-dim: rgba(0, 255, 136, 0.12);
     --text: #21262d;
-    --text-muted: #7d8590;
-    --red: #ff4560;
-    --yellow: #f0a500;
-    --blue: #58a6ff;
     --marker: #FF70B3;
+    --accent: #68FF9E;
 }
 
 
@@ -318,10 +312,14 @@ td {
     font-family: inherit;
     font-size: inherit;
     border: none;
-    background: var(--accent);
+    background: var(--marker);
     width: 3em;
     height: 3em;
     margin: 0;
+}
+
+#attribtution-btn:hover {
+    background: var(--accent);
 }
 
 #attribution {
@@ -355,4 +353,61 @@ footer {
     box-sizing: border-box;
     justify-content: space-between;
     font-size: 8pt;
+}
+
+/* Custom checkbox */
+.custom-check {
+    display: block;
+    position: relative;
+    cursor: pointer;
+    padding-left: 2em;
+}
+
+.custom-check input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkmark {
+    position: absolute;
+    top: -0.1em;
+    left: 0;
+    height: 1.4em;
+    width: 1.4em;
+    background-color: #eee;
+}
+
+.custom-check:hover input~.checkmark {
+    background-color: var(--accent);
+}
+
+.custom-check input:checked~.checkmark {
+    background-color: var(--marker);
+}
+
+.custom-check:hover input:checked~.checkmark {
+    background-color: var(--accent);
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.custom-check input:checked~.checkmark:after {
+    display: block;
+}
+
+.custom-check .checkmark:after {
+    left: 0.53em;
+    top: 0.2em;
+    width: 0.3em;
+    height: 0.6em;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg);
 }

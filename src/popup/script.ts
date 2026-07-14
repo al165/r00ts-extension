@@ -35,6 +35,8 @@ let pageUrl: string;
 
 let bounds: LngLatBounds;
 
+let submitOnView: boolean = false;
+
 class DatacenterMarker {
     focused = false;
     marker: Marker;
@@ -292,14 +294,24 @@ async function load() {
 
     syncMaps(map, mapBuildingsLayer);
 
-    browser.runtime.sendMessage({ type: MessageTypes.GET_TAB_DATA, tabId: tab.id }).then((response: any) => {
-        if (!response)
-            return;
+    browser.runtime.sendMessage({ type: MessageTypes.GET_TAB_DATA, tabId: tab.id })
+        .then((response: any) => {
+            if (!response)
+                return;
 
 
-        const pageData: PageData = response;
-        loadPageData(pageData);
-    });
+            const pageData: PageData = response;
+            loadPageData(pageData);
+        })
+        .catch(() => { });
+
+    browser.runtime.sendMessage({ type: MessageTypes.GET_SETTINGS })
+        .then((response: any) => {
+            const { submitOnView } = response
+
+            setSubmitOnView(submitOnView);
+        })
+        .catch(() => { });
 
     document.getElementById('details-btn')?.addEventListener('click', () => {
         const data = {
@@ -311,7 +323,7 @@ async function load() {
         };
         //console.log(JSON.stringify(data, null, 2));
         const data64 = btoa(JSON.stringify(data));
-        browser.tabs.create({ url: `${process.env.API_ENDPOINT}?data=${data64}` });
+        browser.tabs.create({ url: `${process.env.API_ENDPOINT}?data=${data64}&submit=${submitOnView}` });
 
         window.close();
     });
@@ -322,6 +334,14 @@ async function load() {
     document.getElementById("attribution-btn")?.addEventListener('click', () => {
         if (attribution)
             attribution.classList.toggle('attribution-open');
+    });
+
+    document.getElementById("submitOnView")?.addEventListener('change', (ev) => {
+        const target = ev.target as HTMLInputElement;
+
+        submitOnView = target.checked;
+
+        browser.runtime.sendMessage({ type: MessageTypes.SET_SETTINGS, submitOnView }).catch(() => { });
     });
 }
 
@@ -388,7 +408,7 @@ function addEntry(entry: Entry) {
     entryElements[entry.ip] = row;
 
     if (!entry.fetched) {
-        browser.runtime.sendMessage({ type: MessageTypes.FETCH_ENTRY_DATA, tabId: currentTabId, ip: entry.ip });
+        browser.runtime.sendMessage({ type: MessageTypes.FETCH_ENTRY_DATA, tabId: currentTabId, ip: entry.ip }).catch(() => { });
     }
 }
 
@@ -547,6 +567,16 @@ function fitAll(animate: boolean = true) {
         map.setPadding({ bottom: 80, top: 80, left: 80, right: 80 });
         map.fitBounds(bounds, { padding: { left: 200 }, animate, maxZoom: 14 });
     }
+}
+
+function setSubmitOnView(value: boolean) {
+    submitOnView = value;
+    const checkbox = document.getElementById("submitOnView") as HTMLInputElement;
+
+    if (!checkbox)
+        return;
+
+    checkbox.checked = value;
 }
 
 window.addEventListener('load', async () => {

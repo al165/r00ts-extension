@@ -11,6 +11,8 @@ const tabData: { [key: number]: PageData } = {};
 
 const userData: { country_code?: string } = {};
 
+let submitOnView: boolean = false;
+
 export function getHostname(url: string) {
     try {
         // Need protocol for URL object to work
@@ -39,7 +41,6 @@ export function getHostname(url: string) {
 
 
 function handleMessage(msg: any, _sender: browser.Runtime.MessageSender, sendResponse: (res: any) => void): true {
-    // console.log("handleMessage", MessageTypes[msg.type]);
     if (msg.type == MessageTypes.GET_TAB_DATA) {
         const { tabId } = msg;
 
@@ -78,6 +79,12 @@ function handleMessage(msg: any, _sender: browser.Runtime.MessageSender, sendRes
         getEntryData(tabId, ip);
         sendResponse({ ok: true });
         return true;
+    } else if (msg.type == MessageTypes.GET_SETTINGS) {
+        sendResponse({ submitOnView });
+        return true;
+    } else if (msg.type == MessageTypes.SET_SETTINGS) {
+        submitOnView = msg['submitOnView'];
+        browser.storage.local.set({ submitOnView });
     }
 
     return true;
@@ -159,7 +166,6 @@ function getEntryData(tabId: number, ip: string) {
 }
 
 function initPageData(tabId: number) {
-    console.log('initPageData');
     tabData[tabId] = { pageUrl: "", cachedCount: 0, requestsCount: 0, entries: {}, facilities: {}, networks: {}, networksDatacenters: {} };
 }
 
@@ -270,7 +276,6 @@ browser.tabs.onRemoved.addListener((tabId) => {
 });
 
 browser.tabs.onActivated.addListener((activeTab) => {
-    console.log('browser.tabs.onActivated');
     const { tabId } = activeTab;
 
     if (tabData[tabId] == undefined)
@@ -287,3 +292,11 @@ browser.webNavigation?.onBeforeNavigate?.addListener((details) => {
         tabData[tabId].pageUrl = url;
     }
 });
+
+browser.storage.local.get('submitOnView')
+    .then(val => {
+        if (val['submitOnView'] === undefined || val['submitOnView'] == null)
+            browser.storage.local.set({ 'submitOnView': false });
+        else
+            submitOnView = val['submitOnView'] as boolean;
+    });

@@ -61,4 +61,6 @@ export enum MessageTypes {
     COUNTS,
     UPDATE_FACILITIES,
     PAGE_UPDATE,
+    GET_SETTINGS,
+    SET_SETTINGS,
 };

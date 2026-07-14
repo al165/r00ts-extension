@@ -20,13 +20,17 @@
             <h2><span id="hostname">URL</span> might live here</h2>
             <span id="summary">Rooted on <span id="ip-count">0 IP addresses</span> in <span id="facilities">no datacenters</span> in <span id="cities">0 cities</span></span></div>
           <button id="details-btn">Find out more...</button>
+          <label class="custom-check">
+            Submit result automatically to community database
+            <input id="submitOnView" type="checkbox">
+            <span class="checkmark"></span>
+          </label>
         </div>
         <div id="ip-info">
           <div id="ip-table-container" class="ip-table-closed">
             <table id="ip-table" >
               <tbody id="ip-body"></tbody>
             </table>
-            <!-- <button id="expand-ip-table">&gt;</button> -->
           </div>
         </div>
         <span id="hint-text">No requests captured (yet): refresh the page or navigate to a website to see the results!</span>
