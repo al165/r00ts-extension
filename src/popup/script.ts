@@ -7,8 +7,6 @@ import { Datacenter, Entry, MessageTypes, PageData } from "../types";
 import { LngLatBounds, Map, Marker, setWorkerUrl } from 'maplibre-gl';
 
 import { MapRaseriser } from "./glyphRenderer";
-import mapBuildingsStyle from "./osm_buildings.json";
-import mapStyle from "./osm_surface.json";
 import { padIp } from "./ip_utils";
 
 let currentTabId: number;
@@ -238,14 +236,14 @@ async function load() {
 
     mapBuildingsLayer = new Map({
         container: 'map-buildings',
-        style: mapBuildingsStyle as maplibregl.StyleSpecification,
+        style: `${process.env.API_ENDPOINT}/osm_buildings.json`,
         interactive: true,
         attributionControl: false
     });
 
     map = new Map({
         container: 'map',
-        style: mapStyle as maplibregl.StyleSpecification,
+        style: `${process.env.API_ENDPOINT}/osm_surface.json`,
         interactive: true,
         attributionControl: false
     });
