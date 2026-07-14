@@ -309,6 +309,9 @@ td {
 }
 
 #attribution-btn {
+    position: absolute;
+    top: 0;
+    left: 0;
     font-family: inherit;
     font-size: inherit;
     border: none;
@@ -318,7 +321,7 @@ td {
     margin: 0;
 }
 
-#attribtution-btn:hover {
+#attribution-btn:hover {
     background: var(--accent);
 }
 
@@ -326,7 +329,7 @@ td {
     position: absolute;
     bottom: 1em;
     right: 1em;
-    padding: 0;
+    padding-left: 3.4em;
     background: white;
     font-size: 8pt;
     max-width: 3em;
@@ -361,6 +364,9 @@ footer {
     position: relative;
     cursor: pointer;
     padding-left: 2em;
+    background: rgba(255, 255, 255, 0.8);
+    width: fit-content;
+    height: 1.2em;
 }
 
 .custom-check input {
