@@ -19,13 +19,20 @@ export function getHostname(url: string) {
         const urlObject = new URL(url);
         let hostname = urlObject.hostname;
         hostname = hostname.replace(/^www./, '');
+        hostname = hostname.split('.').slice(-2).join('.');
         return hostname;
     } catch {
         // Manual cleanup
+        // remove whitespace
         url = url.trim();
+        // remove protocol
         url = url.replace(/^https?:\/\//, '');
+        // remove www.
         url = url.replace(/^www./, '');
+        // remove path
         url = url.split('/')[0];
+        // remove subdomains
+        url = url.split('.').slice(-2).join('.');
         return url;
     }
 }
