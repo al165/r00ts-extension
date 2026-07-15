@@ -528,12 +528,12 @@ function updateFacilities(datacenters: { [key: number]: Datacenter }) {
         if (cityNames.length == 0)
             cityInfo.innerText = `unknown location`;
         else if (cityNames.length == 1)
-            cityInfo.innerText = `<em>${cityNames[0]}</em>`;
+            cityInfo.innerHTML = `<em>${cityNames[0]}</em>`;
         else {
             if (numIps == 1)
-                cityInfo.innerText = `one of <em>${cityNames.length} cities</em>`;
+                cityInfo.innerHTML = `one of <em>${cityNames.length} cities</em>`;
             else
-                cityInfo.innerText = `up to <em>${cityNames.length} cities</em>`;
+                cityInfo.innerHTML = `up to <em>${cityNames.length} cities</em>`;
         }
     }
 }
