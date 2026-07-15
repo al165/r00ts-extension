@@ -40,11 +40,12 @@ let submitOnView: boolean = false;
 class DatacenterMarker {
     focused = false;
     marker: Marker;
+    removed = false;
 
     facility: Datacenter;
     markerRoot: HTMLDivElement;
     title: HTMLSpanElement;
-    markerImg: HTMLDivElement;
+    markerImg: HTMLImageElement;
 
     constructor(facility: Datacenter, open_on_load = false) {
         this.facility = facility;
@@ -61,26 +62,21 @@ class DatacenterMarker {
 
         element.appendChild(this.markerRoot);
 
-        this.markerImg = document.createElement('div');
+        this.markerImg = document.createElement('img');
         this.markerRoot.appendChild(this.markerImg);
 
         if (!facility.filename && facility.precise && process.env.API_ENDPOINT) {
             fetch(`${process.env.API_ENDPOINT}/api/aerial/${facility.id}`)
                 .then(res => res.json())
                 .then(data => {
-                    if (!data.filename)
+                    if (!data.filename || this.removed)
                         return;
 
                     facility.filename = data.filename;
 
-                    this.markerImg.className = "marker marker-small";
-                    this.markerImg.innerHTML = `
-                        <img 
-                            class="aerial" 
-                            src="${process.env.API_ENDPOINT}/images/aerial/${facility.filename}"
-                            alt="Aerial view of ${facility.name}">
-                        </img>
-                    `;
+                    this.markerImg.className = "marker marker-small aerial";
+                    this.markerImg.src = `${process.env.API_ENDPOINT}/images/aerial/${facility.filename}`;
+                    this.markerImg.setAttribute('alt', `Aerial view of ${facility.name}`);
 
                     if (open_on_load)
                         this.open();
@@ -124,6 +120,7 @@ class DatacenterMarker {
         })
 
         currentMarker = this;
+        this.focused = true;
     }
 
     close() {
@@ -131,12 +128,13 @@ class DatacenterMarker {
         this.markerRoot.removeChild(this.title);
         this.markerRoot.classList.remove('front');
         this.markerImg.classList.add("marker-small");
+        this.focused = false;
     }
 
     remove() {
         this.close();
         this.marker.remove();
-        //this.markerRoot.remove();
+        this.removed = true;
     }
 };
 
@@ -267,8 +265,6 @@ async function load() {
     );
 
     map.on('load', () => {
-        //fitAll(false);
-
         new ResizeObserver(() =>
             rasteriser.resize(mapCanvas.width, mapCanvas.height),
         ).observe(mapCanvas);
@@ -322,7 +318,7 @@ async function load() {
             pageUrl,
         };
         //console.log(JSON.stringify(data, null, 2));
-        const data64 = btoa(JSON.stringify(data));
+        const data64 = btoa(encodeURIComponent(JSON.stringify(data)));
         browser.tabs.create({ url: `${process.env.API_ENDPOINT}?data=${data64}&submit=${submitOnView}` });
 
         window.close();
@@ -351,7 +347,7 @@ let entryElements: { [key: string]: HTMLDivElement } = {};
 function updateUrl(url: string) {
     const pageUrl = document.getElementById("page-url");
     if (pageUrl)
-        pageUrl.innerHTML = url;
+        pageUrl.textContent = url;
 }
 
 function addEntry(entry: Entry) {
@@ -428,6 +424,7 @@ function loadPageData(pageData: PageData) {
             continue;
         }
     markers = {};
+    facilityIds = [];
 
     for (const ip of Object.keys(currentEntries))
         addEntry(currentEntries[ip]);
@@ -500,7 +497,8 @@ function updateFacilities(datacenters: { [key: number]: Datacenter }) {
     const cities = new Set<string>();
     for (const fac_id of Object.keys(datacenters)) {
         const id = parseInt(fac_id);
-        cities.add(datacenters[id].city);
+        if (datacenters[id].city)
+            cities.add(datacenters[id].city);
         if (!markers[id]) {
             const facility = datacenters[id];
 
@@ -528,14 +526,14 @@ function updateFacilities(datacenters: { [key: number]: Datacenter }) {
     const cityInfo = document.getElementById('cities');
     if (cityInfo) {
         if (cityNames.length == 0)
-            cityInfo.innerHTML = `unknown location`;
+            cityInfo.innerText = `unknown location`;
         else if (cityNames.length == 1)
-            cityInfo.innerHTML = `<em>${cityNames[0]}</em>`;
+            cityInfo.innerText = `<em>${cityNames[0]}</em>`;
         else {
             if (numIps == 1)
-                cityInfo.innerHTML = `one of <em>${cityNames.length} cities</em>`;
+                cityInfo.innerText = `one of <em>${cityNames.length} cities</em>`;
             else
-                cityInfo.innerHTML = `up to <em>${cityNames.length} cities</em>`;
+                cityInfo.innerText = `up to <em>${cityNames.length} cities</em>`;
         }
     }
 }
@@ -563,7 +561,7 @@ function fitAll(animate: boolean = true) {
         return bounds.extend(marker.marker.getLngLat());
     }, new LngLatBounds());
 
-    if (bounds._ne) {
+    if (!bounds.isEmpty()) {
         map.setPadding({ bottom: 80, top: 80, left: 80, right: 80 });
         map.fitBounds(bounds, { padding: { left: 200 }, animate, maxZoom: 14 });
     }
@@ -584,7 +582,6 @@ window.addEventListener('load', async () => {
 });
 
 window.addEventListener('unload', () => {
-    console.log('unload');
     map?.remove(); // releases the WebGL context
     mapBuildingsLayer?.remove();
 
