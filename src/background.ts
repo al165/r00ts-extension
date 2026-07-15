@@ -4,6 +4,8 @@ import { MessageTypes, type Entry, type PageData, Datacenter } from "./types";
 import { parseCDNHeaders } from "./cdn_utils";
 import { IPtoInt, isIpReserved, isIPv4 } from "./popup/ip_utils";
 
+import psl from 'psl';
+
 // Time for each request
 const requestTimings: { [key: string]: number } = {};
 
@@ -20,9 +22,14 @@ export function getHostname(url: string) {
             url = `http://${url}`;
         const urlObject = new URL(url);
         let hostname = urlObject.hostname;
-        hostname = hostname.replace(/^www./, '');
-        hostname = hostname.split('.').slice(-2).join('.');
+
+        if (!isIPv4(hostname)) {
+            const domain = psl.get(hostname);
+            if (domain)
+                hostname = domain;
+        }
         return hostname;
+
     } catch {
         // Manual cleanup
         // remove whitespace
@@ -33,8 +40,6 @@ export function getHostname(url: string) {
         url = url.replace(/^www./, '');
         // remove path
         url = url.split('/')[0];
-        // remove subdomains
-        url = url.split('.').slice(-2).join('.');
         return url;
     }
 }
@@ -44,7 +49,7 @@ function handleMessage(msg: any, _sender: browser.Runtime.MessageSender, sendRes
     if (msg.type == MessageTypes.GET_TAB_DATA) {
         const { tabId } = msg;
 
-        if (tabId == undefined) {
+        if (tabId == undefined || tabId < 0) {
             return true;
         }
 
@@ -54,6 +59,8 @@ function handleMessage(msg: any, _sender: browser.Runtime.MessageSender, sendRes
         if (!tabData[tabId].pageUrl) {
             console.log('pageUrl not set, getting it');
             browser.tabs.get(tabId).then(tab => {
+                if (!tabData[tabId]) return;
+
                 if (tab.url)
                     tabData[tabId].pageUrl = getHostname(tab.url);
 
@@ -81,10 +88,10 @@ function handleMessage(msg: any, _sender: browser.Runtime.MessageSender, sendRes
         return true;
     } else if (msg.type == MessageTypes.GET_SETTINGS) {
         sendResponse({ submitOnView });
-        return true;
     } else if (msg.type == MessageTypes.SET_SETTINGS) {
         submitOnView = msg['submitOnView'];
         browser.storage.local.set({ submitOnView });
+        sendResponse({ ok: true });
     }
 
     return true;
@@ -120,6 +127,9 @@ function getEntryData(tabId: number, ip: string) {
             const { facilities, user, reserved, network } = data;
             if (reserved || !facilities || !network)
                 return;
+
+            // Re-check if tabData is still valid since
+            if (!tabData[tabId]) return;
 
             if (!userData.country_code && user?.country_code)
                 userData.country_code = user.country_code;
@@ -170,15 +180,15 @@ function initPageData(tabId: number) {
 }
 
 browser.tabs.onUpdated.addListener((tabId, change) => {
-    console.log('browser.tabs.onUpdated');
-    if (change.url) {
-        const newUrl = getHostname(change.url);
-        if (tabData[tabId] && tabData[tabId].pageUrl != newUrl) {
-            // Reset
-            initPageData(tabId);
-            tabData[tabId].pageUrl = newUrl;
-            browser.runtime.sendMessage({ type: MessageTypes.PAGE_UPDATE, tabId, data: tabData[tabId] }).catch(() => { });
-        }
+    if (!change.url)
+        return;
+
+    const newUrl = getHostname(change.url);
+    if (tabData[tabId] && tabData[tabId].pageUrl != newUrl) {
+        // Reset
+        initPageData(tabId);
+        tabData[tabId].pageUrl = newUrl;
+        browser.runtime.sendMessage({ type: MessageTypes.PAGE_UPDATE, tabId, data: tabData[tabId] }).catch(() => { });
     }
 });
 
@@ -210,8 +220,9 @@ browser.webRequest.onResponseStarted.addListener(
         if (!fromCache) {
             const startTime = requestTimings[requestId];
             durationMs = startTime ? Math.round(timeStamp - startTime) : undefined;
+        } else
             tabData[tabId].cachedCount += 1;
-        }
+
 
         let clue = parseCDNHeaders(responseHeaders);
 
@@ -266,6 +277,9 @@ browser.webRequest.onResponseStarted.addListener(
             }
         ).catch(() => { });
 
+
+        delete requestTimings[requestId];
+
     },
     { urls: ["<all_urls>"] },
     ['responseHeaders']
@@ -284,14 +298,13 @@ browser.tabs.onActivated.addListener((activeTab) => {
     browser.runtime.sendMessage({ type: MessageTypes.PAGE_UPDATE, tabId, data: tabData[tabId] }).catch(() => { });
 });
 
-browser.webNavigation?.onBeforeNavigate?.addListener((details) => {
-    console.log('browser.webNavigation.onBeforeNavigate');
-    if (details.frameId == 0) {
-        const { tabId, url } = details;
-        initPageData(tabId);
-        tabData[tabId].pageUrl = url;
-    }
-});
+// browser.webNavigation?.onBeforeNavigate?.addListener((details) => {
+//     if (details.frameId == 0) {
+//         const { tabId, url } = details;
+//         initPageData(tabId);
+//         tabData[tabId].pageUrl = url;
+//     }
+// });
 
 browser.storage.local.get('submitOnView')
     .then(val => {

@@ -9,6 +9,7 @@ export function isIPv4(ip: string) {
         return false;
 
     for (const octet of octets) {
+        if (!/^\d{1,3}$/.test(octet)) return false;
         const octValue = parseInt(octet);
 
         if (isNaN(octValue))
@@ -45,6 +46,9 @@ export function cidrToRange(cidr: string) {
     const [ip, prefixLen] = cidr.split('/');
     const prefix = parseInt(prefixLen, 10);
 
+    if (IPtoInt(ip) < 0 || prefix < 0 || prefix > 32)
+        return null
+
     // Convert IP to integer
     const ipInt = ip.split('.')
         .reduce((acc, octet) => (acc << 8) | parseInt(octet, 10), 0) >>> 0;
@@ -60,22 +64,33 @@ export function cidrToRange(cidr: string) {
 }
 
 export function ipInCIDR(ip_int: number, cidr: string) {
-    const { start, end } = cidrToRange(cidr);
+    const cidrResult = cidrToRange(cidr);
+    if (!cidrResult)
+        return false;
+
+    const { start, end } = cidrResult;
     return (ip_int >= start && ip_int <= end);
 }
 
+const RESERVED_CIDR = [
+    "0.0.0.0/8", "10.0.0.0/8", "100.64.0.0/10", "127.0.0.0/8", "169.254.0.0/16", "172.16.0.0/12", "192.0.0.0/24",
+    "192.0.2.0/24", "192.88.99.0/24", "192.168.0.0/16", "198.18.0.0/15", "198.51.100.0/24", "203.0.113.0/24", "224.0.0.0/4",
+    "233.252.0.0/24", "240.0.0.0/4", "255.255.255.255/32"
+];
+
+const RESERVED_RANGES = RESERVED_CIDR.map(cidrToRange)
+
 export function isIpReserved(ip_int: number) {
     // From: https://en.wikipedia.org/wiki/List_of_reserved_IP_addresses
-    const reservedCIDR = [
-        "0.0.0.0/8", "10.0.0.0/8", "100.64.0.0/10", "127.0.0.0/8", "169.254.0.0/16", "172.16.0.0/12", "192.0.0.0/24",
-        "192.0.2.0/24", "192.88.99.0/24", "192.168.0.0/16", "198.18.0.0/15", "198.51.100.0/24", "203.0.113.0/24", "224.0.0.0/4",
-        "233.252.0.0/24", "240.0.0.0/4", "255.255.255.255/32"
-    ];
 
-    for (const cidr of reservedCIDR) {
-        if (ipInCIDR(ip_int, cidr)) {
+    if (ip_int < 0)
+        return true;
+
+    for (const range of RESERVED_RANGES) {
+        if (!range) continue
+
+        if (ip_int >= range.start && ip_int <= range.end)
             return true;
-        }
     }
 
     return false;
