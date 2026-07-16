@@ -343,9 +343,9 @@ export class MapRaseriser {
             this.glyphOverlayCtx.imageSmoothingEnabled = false;
 
         if (this.offscreenCanvas instanceof OffscreenCanvas)
-            this.offscreenCtx = this.offscreenCanvas.getContext('2d', { alpha: false });
+            this.offscreenCtx = this.offscreenCanvas.getContext('2d', { alpha: false, willReadFrequently: true });
         else
-            this.offscreenCtx = this.offscreenCanvas.getContext('2d', { alpha: false });
+            this.offscreenCtx = this.offscreenCanvas.getContext('2d', { alpha: false, willReadFrequently: true });
 
         if (this.offscreenCtx)
             this.offscreenCtx.imageSmoothingEnabled = false;
