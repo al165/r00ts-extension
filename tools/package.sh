@@ -8,6 +8,9 @@ echo "Packaging v$version"
 
 cd ..
 
+rm -rf dist/firefox-extension
+rm -rf dist/chrome-extension
+
 npm run build:production:all
 
 cd dist
