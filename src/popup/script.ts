@@ -4,13 +4,17 @@ window.addEventListener('unhandledrejection', (e) => console.log('unhandled reje
 import * as browser from "webextension-polyfill";
 import { Datacenter, Entry, MessageTypes, PageData } from "../types";
 
-import { LngLatBounds, Map, Marker, setWorkerUrl } from 'maplibre-gl';
+import { LngLatBounds, Map, setWorkerUrl } from 'maplibre-gl';
 
 import { MapRaseriser } from "./glyphRenderer";
 import { padIp } from "./ip_utils";
+import { DatacenterMarker, currentMarker } from "./marker";
 
 let currentTabId: number;
 let currentEntries: { [key: string]: Entry } = {};
+let numFacilities: number = 0;
+let numIps: number = 0;
+let cities: string[] = [];
 
 let map: maplibregl.Map;
 let mapBuildingsLayer: maplibregl.Map;
@@ -23,8 +27,6 @@ let glyphPaletteCanvas: OffscreenCanvas;
 let rasteriser: MapRaseriser;
 
 let markers: { [key: number]: DatacenterMarker } = {};
-let currentMarker: DatacenterMarker | null = null;
-let openingMarker = false;
 
 let facilityIds: number[] = [];
 let networkIds: number[] = [];
@@ -37,106 +39,6 @@ let bounds: LngLatBounds;
 
 let submitOnView: boolean = false;
 
-class DatacenterMarker {
-    focused = false;
-    marker: Marker;
-    removed = false;
-
-    facility: Datacenter;
-    markerRoot: HTMLDivElement;
-    title: HTMLSpanElement;
-    markerImg: HTMLImageElement;
-
-    constructor(facility: Datacenter, open_on_load = false) {
-        this.facility = facility;
-
-        const element = document.createElement('div');
-        element.classList.add('datacenter-marker');
-
-        this.markerRoot = document.createElement('div');
-        this.markerRoot.className = "marker-root";
-
-        this.title = document.createElement('span');
-        this.title.className = "datacenter-title";
-        this.title.innerText = facility.name;
-
-        element.appendChild(this.markerRoot);
-
-        this.markerImg = document.createElement('img');
-        this.markerRoot.appendChild(this.markerImg);
-
-        if (!facility.filename && facility.precise && process.env.API_ENDPOINT) {
-            fetch(`${process.env.API_ENDPOINT}/api/aerial/${facility.id}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (!data.filename || this.removed)
-                        return;
-
-                    facility.filename = data.filename;
-
-                    this.markerImg.className = "marker marker-small aerial";
-                    this.markerImg.src = `${process.env.API_ENDPOINT}/images/aerial/${facility.filename}`;
-                    this.markerImg.setAttribute('alt', `Aerial view of ${facility.name}`);
-
-                    if (open_on_load)
-                        this.open();
-
-                }).catch(err => {
-                    console.error(err);
-                })
-        }
-
-        this.marker = new Marker({ element })
-            .setLngLat([facility.lon, facility.lat])
-            .addTo(map);
-
-        this.marker.on('click', () => {
-            if (this.focused) {
-                this.close();
-            } else {
-                this.open();
-            }
-        });
-    }
-
-    open() {
-        if (currentMarker != null)
-            currentMarker.close();
-
-        openingMarker = true;
-
-        this.markerRoot.appendChild(this.title);
-        this.markerRoot.classList.add('front');
-        this.markerImg.classList.remove("marker-small");
-
-        map.flyTo({
-            zoom: 16,
-            center: [
-                this.facility.lon,
-                this.facility.lat,
-            ],
-            padding: { left: 350 },
-            duration: 1000,
-        })
-
-        currentMarker = this;
-        this.focused = true;
-    }
-
-    close() {
-        currentMarker = null;
-        this.markerRoot.removeChild(this.title);
-        this.markerRoot.classList.remove('front');
-        this.markerImg.classList.add("marker-small");
-        this.focused = false;
-    }
-
-    remove() {
-        this.close();
-        this.marker.remove();
-        this.removed = true;
-    }
-};
 
 function syncMaps(...maps: Map[]) {
     // Create all the movement functions, because if they're created every time
@@ -275,15 +177,15 @@ async function load() {
     });
 
     map.on('click', () => {
-        if (!openingMarker)
-            currentMarker?.close();
+        if (!currentMarker.opening)
+            currentMarker.value?.close();
 
-        openingMarker = false;
+        currentMarker.opening = false;
     });
 
     map.on('zoomend', () => {
         if (map.getZoom() < 15)
-            currentMarker?.close();
+            currentMarker.value?.close();
     });
 
     rasteriser.resize(mapCanvas.width, mapCanvas.height);
@@ -294,7 +196,6 @@ async function load() {
         .then((response: any) => {
             if (!response)
                 return;
-
 
             const pageData: PageData = response;
             loadPageData(pageData);
@@ -405,6 +306,8 @@ function addEntry(entry: Entry) {
     if (!entry.fetched) {
         browser.runtime.sendMessage({ type: MessageTypes.FETCH_ENTRY_DATA, tabId: currentTabId, ip: entry.ip }).catch(() => { });
     }
+
+    showCTA();
 }
 
 function loadPageData(pageData: PageData) {
@@ -465,7 +368,6 @@ function updateNetworksDatacenters(nd: { [key: number]: Set<number> }) {
 function updateCounts(cachedCount: number, requestsCount: number) {
     const requestsCounter = document.getElementById("req-count");
     const cachedCounter = document.getElementById("cached-count");
-    const ipCounter = document.getElementById("ip-count");
 
     if (requestsCounter)
         requestsCounter.innerHTML = requestsCount.toString();
@@ -473,14 +375,7 @@ function updateCounts(cachedCount: number, requestsCount: number) {
     if (cachedCounter)
         cachedCounter.innerHTML = cachedCount.toString();
 
-    const numIps = Object.keys(currentEntries).length;
-    if (ipCounter)
-        if (numIps == 0)
-            ipCounter.innerHTML = 'unknown number of IP addresses';
-        else if (numIps == 1)
-            ipCounter.innerHTML = '<em>1 IP address</em>';
-        else
-            ipCounter.innerHTML = `<em>${numIps}</em> IP addresses`;
+    numIps = Object.keys(currentEntries).length;
     showCTA()
 }
 
@@ -488,8 +383,8 @@ function updateFacilities(datacenters: { [key: number]: Datacenter }) {
     if (!map)
         return;
 
-    const numFacilities = Object.keys(datacenters).length;
-    const numIps = Object.keys(currentEntries).length;
+    numFacilities = Object.keys(datacenters).length;
+    numIps = Object.keys(currentEntries).length;
 
     if (numFacilities) {
         const detailsBtn = document.getElementById('details-btn') as HTMLButtonElement;
@@ -497,48 +392,24 @@ function updateFacilities(datacenters: { [key: number]: Datacenter }) {
             detailsBtn.disabled = false;
     }
 
-    const cities = new Set<string>();
+    const citiesSet = new Set<string>();
+
     for (const fac_id of Object.keys(datacenters)) {
         const id = parseInt(fac_id);
         if (datacenters[id].city)
-            cities.add(datacenters[id].city);
+            citiesSet.add(datacenters[id].city);
         if (!markers[id]) {
             const facility = datacenters[id];
 
-            const marker = new DatacenterMarker(facility, Object.keys(markers).length == 0);
+            const marker = new DatacenterMarker(map, facility, Object.keys(markers).length == 0);
             markers[id] = marker;
 
             facilityIds.push(id);
         }
     }
 
-    const facilityInfo = document.getElementById("facilities");
-    if (facilityInfo) {
-        if (numFacilities == 0)
-            facilityInfo.innerHTML = 'unknown number of datacenters';
-        else if (numFacilities == 1)
-            facilityInfo.innerHTML = '<em>1 datacenter</em>';
-        else
-            if (numIps == 1)
-                facilityInfo.innerHTML = `one of <em>${numFacilities} datacenters</em>`;
-            else
-                facilityInfo.innerHTML = `up to <em>${numFacilities} datacenters</em>`;
-    }
+    cities = Array.from(citiesSet);
 
-    const cityNames = Array.from(cities);
-    const cityInfo = document.getElementById('cities');
-    if (cityInfo) {
-        if (cityNames.length == 0)
-            cityInfo.innerText = `unknown location`;
-        else if (cityNames.length == 1)
-            cityInfo.innerHTML = `<em>${cityNames[0]}</em>`;
-        else {
-            if (numIps == 1)
-                cityInfo.innerHTML = `one of <em>${cityNames.length} cities</em>`;
-            else
-                cityInfo.innerHTML = `up to <em>${cityNames.length} cities</em>`;
-        }
-    }
     showCTA()
 }
 
@@ -546,20 +417,70 @@ function updateSummary(data: PageData) {
     const hostname = document.getElementById('hostname');
     if (hostname)
         hostname.innerText = data.pageUrl;
+
+
     showCTA();
 }
 
 function showCTA() {
-    if (Object.keys(currentEntries).length == 0)
+    const cta = document.getElementById('cta');
+    if (!cta)
         return;
 
-    const cta = document.getElementById('cta');
-    if (cta)
-        cta.style.display = 'block';
+    if (numIps == 0) {
+        cta.style.display = 'none';
+        return;
+    }
+
+    const summary = document.getElementById("summary");
+    if (!summary) return;
+
+    let ipSummary = ''
+    let facilitySummary = '';
+    let citySummary = '';
+
+    if (numIps == 0) {
+        // Shouldn't ever be here, but just in case...
+        ipSummary = "No IP addresses captured for this website yet. Refresh the page to see the results!";
+    } else {
+        if (numIps == 1)
+            ipSummary = "Rooted on <em>1 IP address</em>"
+        else
+            ipSummary = `Rooted on <em>${numIps} IP addresses</em>`;
+
+        if (numFacilities == 0) {
+            facilitySummary = "served by an unknown number of datacenters — larger platforms may operate their own networks that are not in public registeries!";
+        } else {
+            if (numFacilities == 1)
+                facilitySummary = "served by <em>1 datacenter</em>"
+            else if (numIps == 1)
+                facilitySummary = `served by one of <em>${numFacilities} datacenters</em>`;
+            else
+                facilitySummary = `served by up to <em>${numFacilities} datacenters</em>`;
+        }
+
+        if (cities.length) {
+            if (cities.length == 1)
+                citySummary = `in <em>${cities[0]}</em>`;
+            else if (cities.length < 5)
+                citySummary = "in " + cities.slice(0, -1).join(', ') + " and " + cities.at(-1) + "</em>";
+            else
+                citySummary = "in " + cities.slice(0, 4).join(', ') + " and " + (cities.length - 4) + " more</em>";
+        } else {
+            if (numFacilities == 1) {
+                citySummary = 'in an <em>unknown location</em>';
+            } else if (numFacilities > 1) {
+                citySummary = 'in <em>unknown locations</em>';
+            }
+        }
+    }
+
+    summary.innerHTML = [ipSummary, facilitySummary, citySummary].join(' ');
+    cta.style.display = 'block';
 }
 
 function fitAll(animate: boolean = true) {
-    currentMarker?.close();
+    currentMarker.value?.close();
 
     bounds = Object.values(markers).reduce((bounds, marker) => {
         return bounds.extend(marker.marker.getLngLat());
