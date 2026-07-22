@@ -1,5 +1,5 @@
 {
-    "name": "r00ts-webpack",
+    "name": "r00ts-extension",
     "version": "1.0.0",
     "description": "",
     "private": true,
@@ -15,8 +15,8 @@
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "keywords": [],
-    "author": "",
-    "license": "ISC",
+    "author": "AIxDESIGN, Arran Lyon",
+    "license": "AGPL-3.0-only",
     "type": "commonjs",
     "dependencies": {
         "maplibre-gl": "^5.24.0",
